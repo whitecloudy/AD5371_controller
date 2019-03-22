@@ -4,7 +4,7 @@
 #define MAXIMUM_BUFFER 256
 
 const char SERIAL_PORT_1[] = "/dev/ttyACM0" ;
-const unsigned char LDAC_bytes[] = {0xFF, NULL};
+const unsigned char LDAC_bytes[] = {0xFF, '\0'};
 
 SPI_communicator::SPI_communicator(){
   spi_fd = open(SERIAL_PORT_1, O_RDWR | O_NOCTTY | O_NDELAY);

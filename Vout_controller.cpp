@@ -4,6 +4,10 @@
 #include "csv/csv.h"
 #include <string>
 
+#define Group_bit(vout_num) ((vout_num/8)+1)
+#define Channel_bit(vout_num) (vout_num%8)
+#define Address_bit_assembly(group, channel) (((group<<3)+channel)&0x3F)
+
 Vout_controller::Vout_controller(){
   if(offset_data_reader())
     std::cout<<"Error : file input output crashed"<<std::endl;
@@ -32,10 +36,10 @@ Vout_controller::~Vout_controller(){
 
 
 int Vout_controller::offset_data_reader(){
-  std::fstream file_checker(FILE_name,std::fstream::in);
+  std::fstream file_checker(OFFSET_FILE_name,std::fstream::in);
   if(file_checker.is_open()){
     file_checker.close();
-    io::CSVReader<3> file(FILE_name);
+    io::CSVReader<3> file(OFFSET_FILE_name);
     file.read_header(io::ignore_extra_column, "type","number", "value");
     std::string type; int num, value;
     while(file.read_row(type, num, value)){
@@ -87,7 +91,7 @@ int Vout_controller::offset_data_reader(){
 }
 
 int Vout_controller::offset_data_writer(){
-  std::fstream file(FILE_name, std::fstream::out);
+  std::fstream file(OFFSET_FILE_name, std::fstream::out);
   file<<"type"<<","<<"number"<<","<<"value"<<std::endl;
 
   file<<"Group"<<","<<0<<","<<Group0_offset_value<<std::endl;
@@ -123,9 +127,10 @@ int Vout_controller::offset_refresh(){
 
 int Vout_controller::serial_word_maker(int mode_bits, int address_function, int data){
   //checking parameters
-  if(((address_function>=0)&&(address_function<=0x3F))
+  if(
+      ((address_function>=0)&&(address_function<=0x3F))
       && ((((mode_bits>0)&&(mode_bits<=0x3)) && ((data>=0)&&(data<=0x3FFF)))
-        ||((mode_bits==0)&&((data>=0)&&(data<=0xFFFF))))
+         ||((mode_bits==0)&&((data>=0)&&(data<=0xFFFF))))
     )
   {
     if(mode_bits != 0)
@@ -144,7 +149,7 @@ int Vout_controller::serial_word_maker(int mode_bits, int address_function, int 
   }
 }
 
-int Vout_controller::addres_maker(int vout_num){
+int Vout_controller::address_maker(int vout_num){
   switch(vout_num) {
     case ALL_vout_num:
       return Address_bit_assembly(0, 0);
@@ -187,12 +192,12 @@ int Vout_controller::offset_modify(offset_types offset_num, int vout_function, i
     case Vout_offset:
       mode_bits = 2; //10
       Vout_offset_value[vout_function] = value;
-      vout_function = addres_maker(vout_function);
+      vout_function = address_maker(vout_function);
       break;
     case Vout_gain:
       mode_bits = 1; //01
       Vout_gain_value[vout_function] = value;
-      vout_function = addres_maker(vout_function);
+      vout_function = address_maker(vout_function);
       break;
     case Group0_offset:
       mode_bits = 0;
@@ -220,7 +225,7 @@ int Vout_controller::offset_modify(offset_types offset_num, int vout_function, i
 int Vout_controller::voltage_modify_bin(int vout_num, int code){
   int mode_bits = 3;
   
-  serial_word_maker(mode_bits, addres_maker(vout_num), code);
+  serial_word_maker(mode_bits, address_maker(vout_num), code);
   int result = data_sender();
   if(result)
     std::cout<<"data send error : "<<result<<std::endl;
