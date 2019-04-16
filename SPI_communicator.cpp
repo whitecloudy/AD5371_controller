@@ -15,7 +15,7 @@ SPI_communicator::SPI_communicator(){
 
   memset(&newtio, 0, sizeof(newtio));
 
-  newtio.c_cflag = B230400;
+  newtio.c_cflag = B115200;
   newtio.c_cflag |= CS8;
   newtio.c_cflag |= CLOCAL;
   newtio.c_cflag |= CREAD;
