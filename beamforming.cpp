@@ -3,7 +3,7 @@
 #include <cstdlib>
 #include <ctime>
 
-#define BEAMFORMING true
+#define BEAMFORMING false
 
 int main(int argc, char ** argv) {
   int ant_amount = argc - 1;
@@ -45,13 +45,13 @@ int main(int argc, char ** argv) {
   //do random phase multi antenna
   else{
     srand(time(NULL));
-
+    
     for(int i = 0; i<ant_amount; i++){
-       std::cout<<ant_nums[i]<<" antenna"<<std::endl;
        phase = rand() % 360;
+       std::cout<<ant_nums[i]<<" antenna"<<std::endl;
+       std::cout<<phase<<" degree"<<std::endl;
        ctrl.phase_control(ant_nums[i], phase);
        ctrl.data_apply();
-       std::cout<<phase<<" degree"<<std::endl;
     }
   }
 

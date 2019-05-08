@@ -2,6 +2,8 @@
 #include <string>
 #include <cmath>
 
+//#define __DEBUG__
+
 int Phase_Attenuator_controller::load_cal_data(void){
   //loading the calibration data
   for(int i = 0; i<16; i++){
@@ -29,8 +31,9 @@ int Phase_Attenuator_controller::load_cal_data(void){
 int preset_finder(struct cal_ref * V_preset, int start, int end, float phase){
   int middle = (start + end)/2;
 
+#ifdef __DEBUG__
   std::cout<<start<<", "<<middle<<", "<<end<< " || "<<phase<< " || "<<V_preset[middle].phase<<std::endl;
-  
+#endif
   float minus, center, plus;
   int minus_index, center_index, plus_index;
 
@@ -67,12 +70,12 @@ int preset_finder(struct cal_ref * V_preset, int start, int end, float phase){
       return center_index;
     else
       return minus_index;
-
-    if(V_preset[middle].phase > phase)
-      return preset_finder(V_preset, start, middle, phase);
-    else
-      return preset_finder(V_preset, middle+1, end, phase);
   }
+
+  if(V_preset[middle].phase > phase)
+    return preset_finder(V_preset, start, middle, phase);
+  else
+    return preset_finder(V_preset, middle+1, end, phase);
 }
 
 int Phase_Attenuator_controller::find_matched_preset(int ant, float phase){
@@ -110,12 +113,14 @@ int Phase_Attenuator_controller::phase_setup(int ant, int index){
 int Phase_Attenuator_controller::phase_control(int ant, int phase){
   int index = voltage_index_search(ant, phase);
 
+  //fprintf(stderr,"index : %d\n\n",index);
+  //fprintf(stderr,"att voltage = %f\n\n",V_preset[ant][100].po_V);
+  //fprintf(stderr,"pha voltage = %f\n\n",V_preset[ant][100].ph_V);
   return phase_setup(ant, index);
 }
 
 int Phase_Attenuator_controller::phase_control(int ant, float phase){
   int index = voltage_index_search(ant, phase);
-
   return phase_setup(ant, index);
 }
 

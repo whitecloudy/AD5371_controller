@@ -12,7 +12,7 @@
 
 #define CHANNEL 0
 
-#define TX_SIZE 4
+#define TX_SIZE 7
 
 /*
  * Serial communicator with Ardunio
