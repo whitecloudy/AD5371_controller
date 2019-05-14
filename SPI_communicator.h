@@ -9,11 +9,6 @@
 #include <fcntl.h>
 #include <cstring>
 #include "Controller_Global.h"
-
-#define CHANNEL 0
-
-#define TX_SIZE 7
-
 /*
  * Serial communicator with Ardunio
  */
@@ -31,7 +26,6 @@ class SPI_communicator{
      * Transmit DAC Control bytes
      */
     int transmit_cmd(const unsigned char * buffer);
-    int transmit_cmd(std::string buffer);
 
     /*
      * Let arduino to set LDAC signal to apply transmitted DAC control bytes
