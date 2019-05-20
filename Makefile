@@ -3,7 +3,7 @@ CC_VERSION = -std=c++11
 CFLAGS = -W -Wall -g
 TARGET = $(TARGET1)
 TARGET1 = beamforming
-LINK = -lpthread -pthread
+LINK = -lpthread -pthread -lsocket++
 OBJECTS = SPI_communicator.o Vout_controller.o Phase_Attenuator_controller.o Adaptive_beamformer.o
 
 all : $(TARGET) 

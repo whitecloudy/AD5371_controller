@@ -1,5 +1,6 @@
 #include <iostream>
 #include "Phase_Attenuator_controller.h"
+#include "Adaptive_beamformer.h"
 #include <cstdlib>
 #include <ctime>
 
@@ -54,6 +55,13 @@ int main(int argc, char ** argv) {
 #elif defined __NORMAL_BEAMFORMING__
   
   printf("NORMAL BEAMFORMING\n\n");
+
+  Adaptive_beamformer beamformer(&ctrl, ant_amount, ant_nums);
+
+  if(beamformer.start_beamformer()){
+    std::cout<< "Error : beamformer has terminated with error"<< std::endl;
+    return 1;
+  }
 
 
 #endif
