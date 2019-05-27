@@ -36,7 +36,7 @@ IPC_controller::~IPC_controller(){
 
 
 
-int IPC_controller::data_send(char * buf, int buf_len, char flag){
+int IPC_controller::data_send(void * buf, int buf_len, char flag){
   send_buf.msg_type = 1;
   memset(send_buf.msg_data, 0, IO_BUF_SIZE);
 
@@ -56,7 +56,7 @@ int IPC_controller::data_send(char * buf, int buf_len, char flag){
 
 
 
-int IPC_controller::data_recv(char * buf, int buf_len){
+int IPC_controller::data_recv(void * buf, int buf_len){
   int n = msgrcv(receiver_id, &recv_buf, sizeof(recv_buf) - sizeof(long), 0, 0);
 
 #ifdef __IPC_DEBUG__

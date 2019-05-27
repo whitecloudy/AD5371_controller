@@ -9,7 +9,7 @@
 int main(int argc, char ** argv) {
   int ant_amount = argc - 1;
   int * ant_nums = new int[ant_amount];
-  Phase_Attenuator_controller ctrl;
+  Phase_Attenuator_controller ctrl(0);
 
   int phase;
 

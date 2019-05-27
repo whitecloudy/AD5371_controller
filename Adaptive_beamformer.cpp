@@ -17,12 +17,18 @@ Adaptive_beamformer::~Adaptive_beamformer(){
 
 
 
+
 int Adaptive_beamformer::start_beamformer(void){
   if(ipc.wait_sync())
     return -1;
   
   char buffer[IO_BUF_SIZE] = {};
-  
+
+  struct average_corr_data{
+    char RN16[16];
+    float avg_corr;
+  } data;
+
   while(1){
     int rt = ipc.data_recv(buffer);
     if(rt == -IPC_FIN__)
@@ -31,7 +37,15 @@ int Adaptive_beamformer::start_beamformer(void){
       std::cout<<"something wrong"<<std::endl;
       break;
     } 
-    
+
+    memcpy(&data, buffer, sizeof(data));
+
+    for(int i = 0; i<16; i++){
+      std::cout<<(int)data.RN16[i];
+    }
+    std::cout <<" : "<<data.avg_corr <<std::endl;
+
+
   }
 
 

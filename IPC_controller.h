@@ -29,8 +29,8 @@ class IPC_controller{
   public:
     IPC_controller();
     ~IPC_controller();
-    int data_send(char * buf, int buf_len = IO_BUF_SIZE, char flag = 0);
-    int data_recv(char * buf, int buf_len = IO_BUF_SIZE);
+    int data_send(void * buf, int buf_len = IO_BUF_SIZE, char flag = 0);
+    int data_recv(void * buf, int buf_len = IO_BUF_SIZE);
     int send_sync();
     int wait_sync();
 };

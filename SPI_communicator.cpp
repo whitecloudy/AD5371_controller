@@ -10,7 +10,10 @@
 #define PHASE_control_cmd 0x21
 #define LDAC_cmd  0x20
 
+#define SERIAL_INTERVAL 400
+
 //#define __DEBUG__
+//#define __SERIAL_RETURN__
 
 const char SERIAL_PORT_1[] = "/dev/ttyACM0" ;
 const unsigned char LDAC_bytes[8] = {0x20,0x20,0x20,0x20,0x20,0x20,0x20,0};
@@ -30,8 +33,8 @@ SPI_communicator::SPI_communicator(){
   struct termios newtio;
   
   memset(&newtio, 0, sizeof(newtio));
-  newtio.c_cflag = B38400;
-  newtio.c_cflag |= CS8;
+  newtio.c_cflag = B230400;
+  newtio.c_cflag |= CS5;
   newtio.c_cflag |= CLOCAL;
   newtio.c_cflag |= CREAD;
   newtio.c_iflag = IGNPAR;
@@ -83,14 +86,16 @@ int SPI_communicator::transmit_cmd(const unsigned char * spi_bytes){
 
 #ifdef __DEBUG__
   std::cout<<"Write result : "<<(int)buffer[0]<<" "<<(int)buffer[1]<<" "<<(int)buffer[2]<<" " <<(int)buffer[3]<<" "<<(int)buffer[4]<<" "<<(int)buffer[5]<<" "<<(int)buffer[6]<<" " <<(int)buffer[7]<<std::endl;
+  std::cout<<"spi_bytes : "<<(int)spi_bytes[0]<<(int)spi_bytes[1]<<(int)spi_bytes[2]<<std::endl;
+
 #endif
 
 
   int result = write(spi_fd, buffer, TX_SIZE);    //send SPI control bytes
-
+  usleep(SERIAL_INTERVAL);
   memset(buffer, 0, 8);   //clear buffer
 
-  
+#ifdef __SERIAL_RETURN__
   //read bytes from Arduino
   int readed = 0;
   int read_count = 0;
@@ -98,20 +103,25 @@ int SPI_communicator::transmit_cmd(const unsigned char * spi_bytes){
   for(read_count = 0;read_count<7;){
     readed = read(spi_fd, (void*)&(buffer[read_count]), 8);
     read_count += readed;
-
+    
 #ifdef __DEBUG__
     if(readed!=0)
       std::cout<<"current read_count : "<<read_count <<std::endl;
-#endif
   }
+#endif
+#endif
 
 #ifdef __DEBUG__
   std::cout<<"Readed byte : "<<read_count<<std::endl; 
   std::cout<<"Read result : "<<(int)buffer[0]<<" "<<(int)buffer[1]<<" "<<(int)buffer[2]<<" " <<(int)buffer[3]<<" "<<(int)buffer[4]<<" "<<(int)buffer[5]<<" "<<(int)buffer[6]<<" " <<(int)buffer[7]<<std::endl<<std::endl;
-  
+
 #endif
-  if(result != TX_SIZE)
+
+
+  if(result != TX_SIZE){
+    std::cerr << "result was " <<result<<std::endl;
     return 1;
+  }
   return 0;
 }
 
@@ -119,7 +129,7 @@ int SPI_communicator::transmit_cmd(const unsigned char * spi_bytes){
 int SPI_communicator::data_apply(){
   int result = write(spi_fd, LDAC_bytes, TX_SIZE);  //send LDAC cmd
   std::cout<<"data apply"<<std::endl;
-  
+
   if(result != 7){
     fprintf(stderr,"write result : %d\n",result);
     return 1;
