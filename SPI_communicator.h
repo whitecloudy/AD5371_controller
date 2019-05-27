@@ -5,16 +5,19 @@
 #include <errno.h>
 #include <unistd.h>
 #include <string>
-#include <termios.h>
-#include <fcntl.h>
 #include <cstring>
+#include <sys/types.h> 
+#include <sys/socket.h> 
+#include <arpa/inet.h> 
+#include <netinet/in.h> 
 #include "Controller_Global.h"
 /*
  * Serial communicator with Ardunio
  */
 class SPI_communicator{
   private:
-    int spi_fd = 0; 
+    int sockfd = 0; 
+    struct sockaddr_in     servaddr; 
   public:
     /*
      * Initalize Seiral communicate file discripter
