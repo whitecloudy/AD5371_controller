@@ -1,36 +1,20 @@
-#ifndef __SPI_COMMUNICATOR__
-#define __SPI_COMMUNICATOR__
-
 #include <iostream>
 #include <errno.h>
+#include <wiringPiSPI.h>
 #include <unistd.h>
 #include <string>
-#include <termios.h>
-#include <fcntl.h>
-#include <cstring>
-#include "Controller_Global.h"
-/*
- * Serial communicator with Ardunio
- */
+
+#define CHANNEL 0
+
+#define SPI_DOWN_EDGE 1
+#define SPI_UP_EDGE 0
+
 class SPI_communicator{
   private:
-    int spi_fd = 0; 
+    int spi_fd = 0;
   public:
-    /*
-     * Initalize Seiral communicate file discripter
-     */
-    SPI_communicator();
+    SPI_communicator(int channel, int kHz_speed, int mode);
+    int transmit(const unsigned char * buffer, int size);
+    int transmit(std::string buffer);
     ~SPI_communicator();
-
-    /*
-     * Transmit DAC Control bytes
-     */
-    int transmit_cmd(const unsigned char * buffer);
-
-    /*
-     * Let arduino to set LDAC signal to apply transmitted DAC control bytes
-     */
-    int data_apply(void);
 };
-
-#endif
