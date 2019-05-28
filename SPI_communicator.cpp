@@ -3,9 +3,6 @@
 #include <cstdlib>
 #define PORT 10101
 
-#define TX_SIZE 7
-#define MAXIMUM_BUFFER 256
-
 #define PHASE_control_cmd 0x21
 #define LDAC_cmd  0x20
 
@@ -24,7 +21,8 @@ SPI_communicator::SPI_communicator(){
   servaddr.sin_port = htons(PORT); 
   servaddr.sin_addr.s_addr = inet_addr("192.168.1.3"); 
 
-
+  memset(&buf, 0, sizeof(MAXIMUM_DATA));
+  
 }
 
 SPI_communicator::~SPI_communicator(){
@@ -35,32 +33,26 @@ SPI_communicator::~SPI_communicator(){
 
 
 int SPI_communicator::transmit_cmd(const unsigned char * spi_bytes){
-  unsigned char buffer[4]= {};
-  memcpy(&buffer[1],spi_bytes,3);
-  buffer[0] = PHASE_control_cmd;
+  memcpy(&buf[buf_count*FRAME_SIZE],spi_bytes,3);
+  buf_count++;
 
-  int result = sendto(sockfd, buffer, 4, MSG_CONFIRM, (const struct sockaddr *)&servaddr, sizeof(servaddr)); 
+ // int result = sendto(sockfd, buffer, 4, MSG_CONFIRM, (const struct sockaddr *)&servaddr, sizeof(servaddr)); 
 
-  if(result < 0){
-    std::cerr<<"send cmd error"<<std::endl;
-    return 1;
-  }
-  
   return 0;
 }
 
 
 int SPI_communicator::data_apply(){
-  unsigned char buffer = LDAC_cmd;
-
-  int result = sendto(sockfd, &buffer, 1, MSG_CONFIRM, (const struct sockaddr *)&servaddr, sizeof(servaddr)); 
+  int result = sendto(sockfd, buf, buf_count*FRAME_SIZE, MSG_CONFIRM, (const struct sockaddr *)&servaddr, sizeof(servaddr));
 
   if(result < 0){
-    std::cerr<<"send LDAC error"<<std::endl;
+    std::cerr<<"send SPI data error"<<std::endl;
     return 1;
   }
 
-  std::cout<<"data apply"<<std::endl;
+  buf_count = 0;
+
+  std::cout<<"data applied"<<std::endl;
 
   return 0;
 }

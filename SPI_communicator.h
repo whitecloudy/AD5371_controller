@@ -11,16 +11,24 @@
 #include <arpa/inet.h> 
 #include <netinet/in.h> 
 #include "Controller_Global.h"
+
+
+#define MAXIMUM_DATA 256
+#define FRAME_SIZE 3
+
+
 /*
- * Serial communicator with Ardunio
+ * UDP communication with RaspberryPi
  */
 class SPI_communicator{
   private:
     int sockfd = 0; 
-    struct sockaddr_in     servaddr; 
+    struct sockaddr_in     servaddr;
+    unsigned char buf[MAXIMUM_DATA];
+    unsigned int buf_count = 0;
   public:
     /*
-     * Initalize Seiral communicate file discripter
+     * Initalize UDP socket
      */
     SPI_communicator();
     ~SPI_communicator();
