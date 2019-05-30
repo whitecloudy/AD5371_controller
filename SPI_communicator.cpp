@@ -1,11 +1,14 @@
 #include "SPI_communicator.h"
 #include <cstdio>
+#include <bcm2835.h>
 
 #define DEBUG false
 
 SPI_communicator::SPI_communicator(int channel, int kHz_speed, int mode){
   std::cout<<"SPI communicator initialize"<<std::endl;
   spi_fd = wiringPiSPISetupMode(channel, kHz_speed*1000, mode);
+
+  bcm2835_init();
 }
 
 SPI_communicator::~SPI_communicator(){
