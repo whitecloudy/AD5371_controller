@@ -10,11 +10,10 @@
 #define SPI_UP_EDGE 0
 
 class SPI_communicator{
-  private:
-    int spi_fd = 0;
+ // private:
+  //  int spi_fd = 0;
   public:
     SPI_communicator(int channel, int kHz_speed, int mode);
-    int transmit(const unsigned char * buffer, int size);
-    int transmit(std::string buffer);
+    int transmit(char * buffer, int size);
     ~SPI_communicator();
 };
