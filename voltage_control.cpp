@@ -13,11 +13,12 @@ int main(int argc, char * argv[]){
   float volt = atof(argv[2]);
   int modify_result = 0;
   int apply_result = 0;
-  for(int i = 0; i<40; i++){
+  for(int i = 0; i<vout_number; i++){
     modify_result = vout.voltage_modify(i, volt);
-    apply_result = vout.data_apply();
 
   }
+  apply_result = vout.data_apply();
+
   std::cout << "offset modify : " << modify_result << std::endl;
   std::cout << "data apply : "<< apply_result << std::endl;
 

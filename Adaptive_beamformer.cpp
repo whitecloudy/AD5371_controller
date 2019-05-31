@@ -31,7 +31,7 @@ int Adaptive_beamformer::start_beamformer(void){
 
   while(1){
     int rt = ipc.data_recv(buffer);
-    if(rt == -IPC_FIN__)
+    if(rt == -(IPC_FIN__))
       break;   
     else if(rt < 0){
       std::cout<<"something wrong"<<std::endl;

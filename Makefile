@@ -10,10 +10,10 @@ OBJECTS = SPI_communicator.o Vout_controller.o Phase_Attenuator_controller.o Ada
 all : $(TARGET) 
 
 $(TARGET1) : $(TARGET1).o $(OBJECTS)
-	$(CC) $(CFLAGS) $(LINK) $(CC_VERSION) -o $@ $^
+	$(CC) $(CFLAGS) $(CC_VERSION) -o $@ $^ $(LINK)
 
 $(TARGET2) : $(TARGET2).o $(OBJECTS)
-	$(CC) $(CFLAGS) $(LINK) $(CC_VERSION) -o $@ $^
+	$(CC) $(CFLAGS) $(CC_VERSION) -o $@ $^ $(LINK)
 
 
 

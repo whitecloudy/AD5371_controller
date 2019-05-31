@@ -26,6 +26,7 @@ SPI_communicator::SPI_communicator(){
 }
 
 SPI_communicator::~SPI_communicator(){
+  sendto(sockfd,buf,0,MSG_CONFIRM,(const struct sockaddr *)&servaddr, sizeof(servaddr));
   close(sockfd);
 }
 
