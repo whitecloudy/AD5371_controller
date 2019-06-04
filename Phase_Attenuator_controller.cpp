@@ -132,6 +132,9 @@ int Phase_Attenuator_controller::set_integer_index(void){
 }
 
 int Phase_Attenuator_controller::voltage_index_search(int ant, int phase){
+  while(phase < 0)
+    phase += 360;
+
   return index_V_preset[ant][phase%360];
 }
 

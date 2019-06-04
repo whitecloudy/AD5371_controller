@@ -12,14 +12,19 @@
 
 class Adaptive_beamformer{
   private:
-    Phase_Attenuator_controller * controller;
+    Phase_Attenuator_controller * phase_ctrl;
     IPC_controller ipc;
 
     int ant_amount;
-    int * ant_num;
-    int current_beamweights[ANT_num] = {};
+    int * ant_nums;
+    int cur_weights[ANT_num] = {};
 
   private:
+    int weights_addition(int * dest_weights, int * weights0, int * weights1);
+    int weights_addition(int * dest_weights, int * weights);
+
+    int weights_apply(int * weights);
+    int init_beamformer(void);
     int run_beamformer(void);
     int calculate_beamforming_weights(void);
 
