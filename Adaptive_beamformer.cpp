@@ -45,8 +45,9 @@ int Adaptive_beamformer::run_beamformer(void){
       tag_id = tag_id << 1;
       tag_id += data.RN16[i];
     }
-    corr_value = data.avg_corr;
-
+    
+    printf("tag id : %x\n",tag_id);
+    printf("corr : %f\n\n",data.avg_corr);
 
   }
 
