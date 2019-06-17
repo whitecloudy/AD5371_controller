@@ -33,6 +33,9 @@ class IPC_controller{
     int data_recv(void * buf, int buf_len = IO_BUF_SIZE);
     int send_sync();
     int wait_sync();
+    int send_ack();
+    int wait_ack();
+
 };
 
 

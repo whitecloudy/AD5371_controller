@@ -23,6 +23,8 @@ class Adaptive_beamformer{
     int weights_addition(int * dest_weights, int * weights0, int * weights1);
     int weights_addition(int * dest_weights, int * weights);
 
+    void weights_printing(int * weights);
+
     int weights_apply(int * weights);
     int init_beamformer(void);
     int run_beamformer(void);
