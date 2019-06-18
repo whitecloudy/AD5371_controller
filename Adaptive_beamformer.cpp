@@ -3,6 +3,10 @@
 #include <random>
 #include <fstream>
 
+#define PORT 33333
+#define MAX_BUFFER 2048
+#define SA struct sockaddr 
+
 #define __COLLECT_DATA__
 
 #define PREDFINED_RN16_ 0xAAAA
@@ -16,43 +20,23 @@ struct average_corr_data{
   float avg_corr;
 };
 
-double normal_random(double mean, double std_dev){
-  static std::random_device r;
-  static std::default_random_engine generator(r());
-  std::normal_distribution<double> distribution(mean, std_dev);
-
-  return distribution(generator);
-}
-
-
-
 Adaptive_beamformer::Adaptive_beamformer(Phase_Attenuator_controller * controller_p, int ant_amount_p, int * ant_num_p){
   this->phase_ctrl = controller_p;
   this->ant_amount = ant_amount_p;
   this->ant_nums = new int[this->ant_amount];
 
   memcpy(ant_nums, ant_num_p, sizeof(int)*(this->ant_amount));
+
+  set_tcp();
 }
 
 
 
 Adaptive_beamformer::~Adaptive_beamformer(){
   delete this->ant_nums;
+
+  close(sockfd);
 }
-
-int Adaptive_beamformer::init_beamformer(void){
-  for(int i = 0; i < ant_amount; i++){
-    int phase = normal_random(0, 180);
-    while(phase < 0)
-      phase += 360;
-    phase %= 360;
-
-    cur_weights[ant_nums[i]] = phase;
-  }
-
-  return weights_apply(cur_weights);
-}
-
 
 int Adaptive_beamformer::weights_addition(int * dest_weights, int * weights0, int * weights1){
   for(int i = 0; i<ant_amount; i++){
@@ -96,27 +80,16 @@ int Adaptive_beamformer::run_beamformer(void){
 
   struct average_corr_data data;
 
-  //BABF variables
-  int Kp_count = 0;
-  float Kp_corr_value[Kp+1] = {};
-  int Kp_weight_additive[Kp+1][ANT_num] = {};
-  int Kp_end_count = 0;
-
   int round = 0;
 
 #ifdef __COLLECT_DATA__
   std::ofstream log_file("log.txt",std::ofstream::out);
-
-  log_file << "beam weight"<< std::endl;
-  for(int i = 0; i < ANT_num; i++){
-    log_file << cur_weights[i] << " ";
-  }
-  log_file << std::endl;
-
-
 #endif
 
   while(1){
+    get_weights(cur_weights);
+    weights_apply(cur_weights);
+
     if(ipc.send_ack())
       return 1;
 
@@ -137,92 +110,34 @@ int Adaptive_beamformer::run_beamformer(void){
 
     //if tag is our tag
     if(tag_id == PREDFINED_RN16_){
-      //handle current Kp
-      Kp_corr_value[Kp_count] = data.avg_corr;
-
-      std::cout << "corr : "<< data.avg_corr<<std::endl;
-
+      set_correlation(data.avg_corr);
 
 #ifdef __COLLECT_DATA__
-      log_file <<"corr : "<<data.avg_corr<< std::endl;
-
-
-#endif
-
-      if(Kp_count > Kp){  //if Kp round is done
-        Kp_count = 0;
-        int corr_max_index = 0;
-
-        //find maximum correlation Kp index
-        for(int i = 0; i<=Kp; i++){
-          if(Kp_corr_value[corr_max_index] < Kp_corr_value[i])
-            corr_max_index = i;
-        }
-
-        if(corr_max_index == 0){
-          Kp_end_count += 1;
-          if(Kp_end_count >= SAME_COUNT)
-            break;
-        }else
-          Kp_end_count = 0;
-
-        std::cout << "< round "<<round++<<" >"<<std::endl;
-        std::cout << "max corr : "<< Kp_corr_value[corr_max_index]<<std::endl;
-        std::cout << "max index : "<< corr_max_index<<std::endl<<std::endl;
-
-
-        //modify current beamweights
-        weights_addition(cur_weights, Kp_weight_additive[corr_max_index]);
-        weights_apply(cur_weights);
-
-#ifdef __COLLECT_DATA__
-        log_file << "<<<< round : "<<round - 1<< ">>>>" << std::endl;
-        log_file << "max index : "<< corr_max_index<<std::endl;
-        log_file << "max corr : "<< Kp_corr_value[corr_max_index]<<std::endl;
-        log_file << std::endl << std::endl;
-        log_file << "beam weight"<< std::endl;
-        for(int i = 0; i < ANT_num; i++){
-          log_file << cur_weights[i] << " ";
-        }
-        log_file << std::endl;
-
-
-#endif
-
+      log_file << round++ <<", ";
+      for(int i = 0; i<ANT_num; i++){
+        log_file << cur_weights[i] << ", ";
       }
-      else{   //if Kp round is not done yet
-        Kp_count+=1;
-
-        //make new addtive of this Kp round
-        for(int i = 0; i<ant_amount; i++){
-          Kp_weight_additive[Kp_count][ant_nums[i]] = BETA * normal_random(0, 180);
-          std::cout<<Kp_weight_additive[Kp_count][ant_nums[i]]<< " ";
-        }
-
-        std::cout<<std::endl;
-
-        int tmp_weights[ANT_num];
-        weights_addition(tmp_weights, cur_weights, Kp_weight_additive[Kp_count]); 
-        weights_apply(tmp_weights);
-
-
-#ifdef __COLLECT_DATA__
-        log_file << "beam weight"<< std::endl;
-        for(int i = 0; i < ANT_num; i++){
-          log_file << tmp_weights[i] << " ";
-        }
-        log_file << std::endl;
-
-
+      log_file << data.avg_corr <<std::endl;
 
 #endif
+    }else{
+      set_correlation(0.0);
 
-
-      }
+#ifdef __COLLECT_DATA__
+    log_file << round++ <<", ";
+    for(int i = 0; i<ANT_num; i++){
+      log_file << cur_weights[i] << ", ";
     }
+    log_file << 0 <<std::endl;
+
+#endif
+    }
+
   }//end of while(1)
 
+#ifdef __COLLECT_DATA__
   log_file.close();
+#endif
 
   weights_printing(cur_weights);
 
@@ -241,7 +156,88 @@ int Adaptive_beamformer::start_beamformer(void){
   if(ipc.wait_sync())
     return -1;
 
-  init_beamformer();
-
   return run_beamformer();
+}
+
+
+void Adaptive_beamformer::set_tcp(){
+  sockfd = socket(AF_INET, SOCK_STREAM, 0); 
+  if (sockfd == -1) { 
+    printf("socket creation failed...\n"); 
+    exit(0); 
+  } 
+  else
+    printf("Socket successfully created..\n"); 
+  bzero(&servaddr, sizeof(servaddr)); 
+
+  servaddr.sin_family = AF_INET; 
+  servaddr.sin_addr.s_addr = htonl(INADDR_ANY); 
+  servaddr.sin_port = htons(PORT); 
+
+
+  if ((bind(sockfd, (SA*)&servaddr, sizeof(servaddr))) != 0) { 
+    printf("socket bind failed...\n"); 
+    exit(0); 
+  } 
+  else
+    printf("Socket successfully binded..\n"); 
+
+  if ((listen(sockfd, 5)) != 0) { 
+    printf("Listen failed...\n"); 
+    exit(0); 
+  } 
+  else
+    printf("Server listening..\n"); 
+  len = sizeof(cli); 
+
+  connfd = accept(sockfd, (SA*)&cli, (socklen_t*)&len); 
+  if (connfd < 0) { 
+    printf("server acccept failed...\n"); 
+    exit(0); 
+  } 
+  else
+    printf("server acccept the client...\n"); 
+
+}
+
+int Adaptive_beamformer::get_weights(int * weights){
+  int n;
+  char buf[MAX_BUFFER] = {};
+
+  n = read(connfd, buf, sizeof(buf));
+  buf[n] = NULL;
+
+  rapidjson::Document doc;
+
+  if(doc.Parse(buf).HasParseError()){
+    std::cerr<<"Parse failed : "<<buf<<std::endl;
+    exit(1);
+  }
+
+  assert(doc["w1"].IsString());
+  assert(doc["w2"].IsString());
+  assert(doc["w3"].IsString());
+
+  weights[ant_nums[0]] = std::stof(doc["w1"].GetString());
+  weights[ant_nums[1]] = std::stof(doc["w2"].GetString());
+  weights[ant_nums[2]] = std::stof(doc["w3"].GetString());
+
+  return 0;
+}
+
+int Adaptive_beamformer::set_correlation(float corr_value){
+  const char* json = "{\"correlation\":0.0}";
+  rapidjson::Document doc1;
+
+  doc1.Parse(json);
+
+  doc1["correlation"] = corr_value;
+
+  rapidjson::StringBuffer buffer;
+  rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+  doc1.Accept(writer);
+
+  write(connfd, buffer.GetString(), strlen(buffer.GetString()));
+
+  return 0;
 }

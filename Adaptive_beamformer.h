@@ -9,6 +9,12 @@
 #include <cstdio>
 #include <thread>
 
+#include "rapidjson/document.h"
+#include "rapidjson/prettywriter.h"
+#include "rapidjson/writer.h"
+#include "rapidjson/stringbuffer.h"
+
+
 
 class Adaptive_beamformer{
   private:
@@ -20,6 +26,11 @@ class Adaptive_beamformer{
     int cur_weights[ANT_num] = {};
 
   private:
+    int sockfd, connfd, len; 
+    struct sockaddr_in servaddr, cli;
+  
+  
+  private:
     int weights_addition(int * dest_weights, int * weights0, int * weights1);
     int weights_addition(int * dest_weights, int * weights);
 
@@ -29,6 +40,11 @@ class Adaptive_beamformer{
     int init_beamformer(void);
     int run_beamformer(void);
     int calculate_beamforming_weights(void);
+
+  private:
+    void set_tcp(void);
+    int get_weights(int * weights);
+    int set_correlation(float corr_value);
 
   public:
     Adaptive_beamformer(Phase_Attenuator_controller * controller, int ant_amount, int * ant_num);
