@@ -176,14 +176,18 @@ int Adaptive_beamformer::run_beamformer(void){
         weights_apply(cur_weights);
 
 #ifdef __COLLECT_DATA__
+        /*
         log_file << "<<<< round : "<<round - 1<< ">>>>" << std::endl;
         log_file << "max index : "<< corr_max_index<<std::endl;
         log_file << "max corr : "<< Kp_corr_value[corr_max_index]<<std::endl;
         log_file << std::endl << std::endl;
         log_file << "beam weight"<< std::endl;
+        */
+        log_file << round - 1 << ", ";
         for(int i = 0; i < ANT_num; i++){
-          log_file << cur_weights[i] << " ";
+          log_file << cur_weights[i] << ", ";
         }
+        log_file <<Kp_corr_value[corr_max_index];
         log_file << std::endl;
 
 
