@@ -35,6 +35,8 @@ Adaptive_beamformer::Adaptive_beamformer(Phase_Attenuator_controller * controlle
 Adaptive_beamformer::~Adaptive_beamformer(){
   delete this->ant_nums;
 
+  std::cout<<"closed"<<std::endl;
+  close(connfd);
   close(sockfd);
 }
 
@@ -83,23 +85,29 @@ int Adaptive_beamformer::run_beamformer(void){
   int round = 0;
 
 #ifdef __COLLECT_DATA__
-  std::ofstream log_file("log.txt",std::ofstream::out);
+  std::ofstream log_file("log.txt",std::ofstream::app);
 #endif
 
-  while(1){
-    get_weights(cur_weights);
-    weights_apply(cur_weights);
 
+  bool redo_flag = true;
+  while(1){
+    if(redo_flag){
+      get_weights(cur_weights);
+      weights_apply(cur_weights);
+      redo_flag = false;
+    }
     if(ipc.send_ack())
       return 1;
 
     int rt = ipc.data_recv(buffer);
-    if(rt == -(IPC_FIN__))
-      break;   
-    else if(rt < 0){
-      std::cout<<"something wrong"<<std::endl;
-      break;
-    } 
+    if(rt < 0){
+      std::cout << rt <<std::endl;
+      ipc.wait_sync();
+      continue;
+    }
+
+    std::cout << rt <<std::endl;
+
 
     memcpy(&data, buffer, sizeof(data));
 
@@ -120,15 +128,19 @@ int Adaptive_beamformer::run_beamformer(void){
       log_file << data.avg_corr <<std::endl;
 
 #endif
+
+      redo_flag = true;
     }else{
-      set_correlation(0.0);
+      std::cout << "wrong data"<<std::endl;
+      std::cout << tag_id<<std::endl;
+      //      set_correlation(0.0);
 
 #ifdef __COLLECT_DATA__
-    log_file << round++ <<", ";
-    for(int i = 0; i<ANT_num; i++){
-      log_file << cur_weights[i] << ", ";
-    }
-    log_file << 0 <<std::endl;
+      //    log_file << round++ <<", ";
+      //  for(int i = 0; i<ANT_num; i++){
+      //    log_file << cur_weights[i] << ", ";
+      //  }
+      //  log_file << 0 <<std::endl;
 
 #endif
     }

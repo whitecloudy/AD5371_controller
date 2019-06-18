@@ -66,7 +66,6 @@ int main(int argc, char ** argv) {
 
 #endif
 
-  std::cin.get();
 
   delete(ant_nums);
   return 0;

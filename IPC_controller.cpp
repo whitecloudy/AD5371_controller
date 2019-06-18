@@ -109,6 +109,7 @@ int IPC_controller::wait_sync(){
   int rt;
 
   while(1){
+    std::cout << "wait sync"<<std::endl;
     rt = data_recv(dummy_buf);
 #ifdef __IPC_DEBUG__
     std::cout<<"data_recv return : "<<rt<<std::endl;
@@ -121,9 +122,10 @@ int IPC_controller::wait_sync(){
       send_ack();
       std::cout<< "SYNC complete"<<std::endl; 
       return 0;
-    }else if(rt == -IPC_FIN__) //Wrong FIN
+    }else if(rt == -IPC_FIN__){ //Wrong FIN
       std::cout << "Wrong FIN came"<<std::endl;
-    return 1;
+      return -IPC_FIN__;
+    }
   }
 }
 
