@@ -106,13 +106,13 @@ int Adaptive_beamformer::run_beamformer(void){
 
 #ifdef __COLLECT_DATA__
   std::ofstream log_file("log.txt",std::ofstream::out);
-
+/*
   log_file << "beam weight"<< std::endl;
   for(int i = 0; i < ANT_num; i++){
     log_file << cur_weights[i] << " ";
   }
   log_file << std::endl;
-
+*/
 
 #endif
 
@@ -144,7 +144,7 @@ int Adaptive_beamformer::run_beamformer(void){
 
 
 #ifdef __COLLECT_DATA__
-      log_file <<"corr : "<<data.avg_corr<< std::endl;
+  //    log_file <<"corr : "<<data.avg_corr<< std::endl;
 
 
 #endif
@@ -211,12 +211,13 @@ int Adaptive_beamformer::run_beamformer(void){
 
 
 #ifdef __COLLECT_DATA__
+        /*
         log_file << "beam weight"<< std::endl;
         for(int i = 0; i < ANT_num; i++){
           log_file << tmp_weights[i] << " ";
         }
         log_file << std::endl;
-
+*/
 
 
 #endif
