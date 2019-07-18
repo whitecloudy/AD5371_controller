@@ -98,12 +98,6 @@ int Adaptive_beamformer::run_beamformer(void){
 
   struct average_corr_data data;
 
-  //BABF variables
-  int Kp_count = 0;
-  float Kp_corr_value[Kp+1] = {};
-  int Kp_weight_additive[Kp+1][ANT_num] = {};
-  int Kp_end_count = 0;
-
   int round = 0;
 
   while(1){
@@ -119,57 +113,10 @@ int Adaptive_beamformer::run_beamformer(void){
       tag_id += data.RN16[i];
     }
 
-    //if tag is our tag
-    if(tag_id == PREDFINED_RN16_){
-      //handle current Kp
-      Kp_corr_value[Kp_count] = data.avg_corr;
+    /*************************Add algorithm here***************************/
+    
+    /*****************************************************************/
 
-      std::cout << "corr : "<< data.avg_corr<<std::endl;
-      if(Kp_count > Kp){  //if Kp round is done
-        Kp_count = 0;
-        int corr_max_index = 0;
-
-        //find maximum correlation Kp index
-        for(int i = 0; i<=Kp; i++){
-          if(Kp_corr_value[corr_max_index] < Kp_corr_value[i])
-            corr_max_index = i;
-        }
-
-        if(corr_max_index == 0){
-          Kp_end_count += 1;
-          if(Kp_end_count >= SAME_COUNT)
-            break;
-        }else
-          Kp_end_count = 0;
-
-        std::cout << "< round "<<round++<<" >"<<std::endl;
-        std::cout << "max corr : "<< Kp_corr_value[corr_max_index]<<std::endl;
-        std::cout << "max index : "<< corr_max_index<<std::endl<<std::endl;
-
-
-        //modify current beamweights
-        weights_addition(cur_weights, Kp_weight_additive[corr_max_index]);
-        weights_apply(cur_weights);
-
-
-      }
-      else{   //if Kp round is not done yet
-        Kp_count+=1;
-
-        //make new addtive of this Kp round
-        for(int i = 0; i<ant_amount; i++){
-          Kp_weight_additive[Kp_count][ant_nums[i]] = BETA * normal_random(0, 180);
-          std::cout<<Kp_weight_additive[Kp_count][ant_nums[i]]<< " ";
-        }
-
-        std::cout<<std::endl;
-
-        int tmp_weights[ANT_num];
-        weights_addition(tmp_weights, cur_weights, Kp_weight_additive[Kp_count]); 
-        weights_apply(tmp_weights);
-
-      }
-    }//end of BABF algorithm
 
     //send ack so that Gen2 program can recognize that the beamforming has been done
     if(ipc.send_ack() == -1){
