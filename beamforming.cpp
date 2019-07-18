@@ -13,6 +13,10 @@ int main(int argc, char ** argv) {
 
   int phase;
 
+  if(ant_amount == 0){
+    std::cerr << "Need Antenna number"<<std::endl;
+    return 1;
+  }
 
   for(int i = 1; i <= ant_amount; i++){
     ant_nums[i-1] = atoi(argv[i]);

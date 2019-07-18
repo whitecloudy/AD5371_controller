@@ -2,8 +2,10 @@
 #include <cstring>
 #include <random>
 #include <fstream>
+#include <sys/time.h>
 
 #define __COLLECT_DATA__
+//#define __TIME_STAMP__
 
 #define PREDFINED_RN16_ 0xAAAA
 
@@ -104,28 +106,10 @@ int Adaptive_beamformer::run_beamformer(void){
 
   int round = 0;
 
-#ifdef __COLLECT_DATA__
-  std::ofstream log_file("log.txt",std::ofstream::out);
-/*
-  log_file << "beam weight"<< std::endl;
-  for(int i = 0; i < ANT_num; i++){
-    log_file << cur_weights[i] << " ";
-  }
-  log_file << std::endl;
-*/
-
-#endif
-
   while(1){
-    if(ipc.send_ack())
-      return 1;
-
-    int rt = ipc.data_recv(buffer);
-    if(rt == -(IPC_FIN__))
+    if(ipc.data_recv(buffer) == -1){
+      std::cerr <<"Breaker is activated"<<std::endl;
       break;   
-    else if(rt < 0){
-      std::cout<<"something wrong"<<std::endl;
-      break;
     } 
 
     memcpy(&data, buffer, sizeof(data));
@@ -141,14 +125,6 @@ int Adaptive_beamformer::run_beamformer(void){
       Kp_corr_value[Kp_count] = data.avg_corr;
 
       std::cout << "corr : "<< data.avg_corr<<std::endl;
-
-
-#ifdef __COLLECT_DATA__
-  //    log_file <<"corr : "<<data.avg_corr<< std::endl;
-
-
-#endif
-
       if(Kp_count > Kp){  //if Kp round is done
         Kp_count = 0;
         int corr_max_index = 0;
@@ -175,23 +151,6 @@ int Adaptive_beamformer::run_beamformer(void){
         weights_addition(cur_weights, Kp_weight_additive[corr_max_index]);
         weights_apply(cur_weights);
 
-#ifdef __COLLECT_DATA__
-        /*
-        log_file << "<<<< round : "<<round - 1<< ">>>>" << std::endl;
-        log_file << "max index : "<< corr_max_index<<std::endl;
-        log_file << "max corr : "<< Kp_corr_value[corr_max_index]<<std::endl;
-        log_file << std::endl << std::endl;
-        log_file << "beam weight"<< std::endl;
-        */
-        log_file << round - 1 << ", ";
-        for(int i = 0; i < ANT_num; i++){
-          log_file << cur_weights[i] << ", ";
-        }
-        log_file <<Kp_corr_value[corr_max_index];
-        log_file << std::endl;
-
-
-#endif
 
       }
       else{   //if Kp round is not done yet
@@ -209,26 +168,16 @@ int Adaptive_beamformer::run_beamformer(void){
         weights_addition(tmp_weights, cur_weights, Kp_weight_additive[Kp_count]); 
         weights_apply(tmp_weights);
 
-
-#ifdef __COLLECT_DATA__
-        /*
-        log_file << "beam weight"<< std::endl;
-        for(int i = 0; i < ANT_num; i++){
-          log_file << tmp_weights[i] << " ";
-        }
-        log_file << std::endl;
-*/
-
-
-#endif
-
-
       }
+    }//end of BABF algorithm
+
+    //send ack so that Gen2 program can recognize that the beamforming has been done
+    if(ipc.send_ack() == -1){
+      break;
     }
   }//end of while(1)
 
-  log_file.close();
-
+  //print wait
   weights_printing(cur_weights);
 
   return 0;
@@ -243,10 +192,10 @@ void Adaptive_beamformer::weights_printing(int * weights){
 
 
 int Adaptive_beamformer::start_beamformer(void){
+  init_beamformer();
+
   if(ipc.wait_sync())
     return -1;
-
-  init_beamformer();
 
   return run_beamformer();
 }
