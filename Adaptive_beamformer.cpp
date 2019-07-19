@@ -114,7 +114,11 @@ int Adaptive_beamformer::run_beamformer(void){
     }
 
     /*************************Add algorithm here***************************/
-    
+
+    //this is just for test
+    std::cout << "tag id : "<<tag_id<<std::endl;
+    std::cout << "avg corr : "<<data.avg_corr<<std::endl;
+
     /*****************************************************************/
 
 
