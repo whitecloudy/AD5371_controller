@@ -72,13 +72,14 @@ int main(int argc, char** argv) {
 
   SPI_communicator spi_comm(0, spi_speed, SPI_DOWN_EDGE);
   GPIO_communicator ldac(LDAC_pin, GPIO_UP);
-  GPIO_communicator sync(SYNC_pin, GPIO_DOWN);
 
   ////////////////////////////////////////////
 
 
   while(running){
-    int len, n;
+    int len = sizeof(struct sockaddr_in);
+      
+      int n;
 
     std::cout <<"Running!"<<std::endl;
     n = recvfrom(sockfd, buffer, MAXLINE, MSG_WAITALL, (struct sockaddr *) &cliaddr,(socklen_t *) &len); 
@@ -90,6 +91,7 @@ int main(int argc, char** argv) {
 #endif
 
 
+    std::cout<< n <<std::endl;
     for(int i = 0; i<n; i+=3){
       //    sync.give_signal();
       spi_comm.transmit(&buffer[i], 3);
@@ -100,7 +102,9 @@ int main(int argc, char** argv) {
 
 
     ldac.give_signal();
-  }
+    sendto(sockfd, &n, sizeof(int), MSG_CONFIRM, (const struct sockaddr *)&cliaddr, sizeof(cliaddr));
+ 
+ }
 
   close(sockfd);
 
