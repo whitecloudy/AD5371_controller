@@ -1,5 +1,5 @@
-#ifndef __ADAPTIVE_BEAMFORMER__
-#define __ADAPTIVE_BEAMFORMER__
+#ifndef __BEAMFORMER__
+#define __BEAMFORMER__
 
 #include "Controller_Global.h"
 #include "Phase_Attenuator_controller.h"
