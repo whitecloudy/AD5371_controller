@@ -16,6 +16,8 @@
 struct average_corr_data{
   char RN16[16];
   float avg_corr;
+  float avg_i;
+  float avg_q;
 };
 
 double normal_random(double mean, double std_dev){
@@ -115,6 +117,11 @@ int Beamformer::run_beamformer(void){
 
     /*************************Add algorithm here***************************/
 
+
+    printf("tag id : %x\n",tag_id);
+    printf("avg : %f\n",data.avg_corr);
+    printf("iq avg : %f %f\n",data.avg_i,data.avg_q);
+    printf("\n");
 
 
 
