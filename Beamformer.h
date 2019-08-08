@@ -10,6 +10,14 @@
 #include <thread>
 
 
+struct average_corr_data{
+  char RN16[16];
+  float avg_corr;
+  float avg_i;
+  float avg_q;
+};
+
+
 class Beamformer{
   private:
     Phase_Attenuator_controller * phase_ctrl;

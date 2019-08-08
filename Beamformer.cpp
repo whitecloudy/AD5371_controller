@@ -3,22 +3,14 @@
 #include <random>
 #include <fstream>
 #include <sys/time.h>
+#include "Adaptive_Beamtrainer.h"
 
 #define __COLLECT_DATA__
 //#define __TIME_STAMP__
 
 #define PREDFINED_RN16_ 0xAAAA
 
-#define Kp 8
-#define BETA 0.05
-#define SAME_COUNT 3
 
-struct average_corr_data{
-  char RN16[16];
-  float avg_corr;
-  float avg_i;
-  float avg_q;
-};
 
 double normal_random(double mean, double std_dev){
   static std::random_device r;
@@ -95,12 +87,11 @@ int Beamformer::weights_apply(int * weights){
 int Beamformer::run_beamformer(void){
 
   char buffer[IO_BUF_SIZE] = {};
-
   uint16_t tag_id = 0;
-
   struct average_corr_data data;
-
   int round = 0;
+
+
 
   while(1){
     if(ipc.data_recv(buffer) == -1){
@@ -116,12 +107,6 @@ int Beamformer::run_beamformer(void){
     }
 
     /*************************Add algorithm here***************************/
-
-
-    printf("tag id : %x\n",tag_id);
-    printf("avg : %f\n",data.avg_corr);
-    printf("iq avg : %f %f\n",data.avg_i,data.avg_q);
-    printf("\n");
 
 
 
