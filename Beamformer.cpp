@@ -82,6 +82,23 @@ int Beamformer::weights_apply(int * weights){
   return phase_ctrl->data_apply();
 }
 
+int Beamformer::weights_apply(void){
+  int * weights = cur_weights;
+  for(int i = 0; i<ant_amount; i++){
+    phase_ctrl->phase_control(ant_nums[i], weights[ant_nums[i]]);
+  }
+  return phase_ctrl->data_apply();
+}
+
+
+
+int Beamformer::vector2cur_weights(std::vector<int> weightVector){
+  for(int i = 0; i<ant_amount;i++){
+    cur_weights[ant_nums[i]] = weightVector[i];
+  }
+  return 0;
+}
+
 
 
 int Beamformer::run_beamformer(void){
@@ -91,7 +108,11 @@ int Beamformer::run_beamformer(void){
   struct average_corr_data data;
   int round = 0;
 
+  Adaptive_beamtrainer BWtrainer(ant_amount);
 
+  std::vector<int> weightVector = BWtrainer.getRandomWeight();
+  vector2cur_weights(weightVector);
+  weights_apply(cur_weights);
 
   while(1){
     if(ipc.data_recv(buffer) == -1){
@@ -108,7 +129,14 @@ int Beamformer::run_beamformer(void){
 
     /*************************Add algorithm here***************************/
 
-
+    if(tag_id == PREDFINED_RN16_){
+      weightVector = BWtrainer.getRespond(data);
+      vector2cur_weights(weightVector);
+      if(weights_apply(cur_weights)){
+        std::cerr<<"weight apply failed"<<std::endl;
+        return 1;
+      }
+    }
 
     /*****************************************************************/
 

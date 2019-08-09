@@ -32,8 +32,11 @@ class Beamformer{
     int weights_addition(int * dest_weights, int * weights);
 
     void weights_printing(int * weights);
+    int vector2cur_weights(std::vector<int> weightVector);
 
     int weights_apply(int * weights);
+    int weights_apply(void);
+
     int init_beamformer(void);
     int run_beamformer(void);
     int calculate_beamforming_weights(void);
