@@ -11,6 +11,7 @@
 
 
 struct average_corr_data{
+  char successFlag;
   char RN16[16];
   float avg_corr;
   float avg_i;

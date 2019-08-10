@@ -110,11 +110,12 @@ int Beamformer::run_beamformer(void){
 
   Adaptive_beamtrainer BWtrainer(ant_amount);
 
-  std::vector<int> weightVector = BWtrainer.getRandomWeight();
+  std::vector<int> weightVector = BWtrainer.startTraining();
   vector2cur_weights(weightVector);
   weights_apply(cur_weights);
 
   while(1){
+
     if(ipc.data_recv(buffer) == -1){
       std::cerr <<"Breaker is activated"<<std::endl;
       break;   
@@ -122,33 +123,59 @@ int Beamformer::run_beamformer(void){
 
     memcpy(&data, buffer, sizeof(data));
 
-    for(int i = 0; i<16; i++){
-      tag_id = tag_id << 1;
-      tag_id += data.RN16[i];
-    }
+    if(data.successFlag == 1){
 
-    /*************************Add algorithm here***************************/
+      for(int i = 0; i<16; i++){
+        tag_id = tag_id << 1;
+        tag_id += data.RN16[i];
+      }
 
-    if(tag_id == PREDFINED_RN16_){
-      weightVector = BWtrainer.getRespond(data);
+      /*************************Add algorithm here***************************/
+
+      printf("Got RN16 : %x\n",tag_id);
+      printf("avg corr : %f\n",data.avg_corr);
+      printf("avg iq : %f, %f\n\n",data.avg_i, data.avg_q);
+
+
+      if(tag_id == PREDFINED_RN16_){
+        weightVector = BWtrainer.getRespond(data);
+        vector2cur_weights(weightVector);
+        if(weights_apply(cur_weights)){
+          std::cerr<<"weight apply failed"<<std::endl;
+          return 1;
+        }
+      }
+
+    }else if(data.successFlag == 0){
+      printf("Couldn't get RN16\n\n");
+
+      weightVector = BWtrainer.cannotGetRespond();
       vector2cur_weights(weightVector);
       if(weights_apply(cur_weights)){
         std::cerr<<"weight apply failed"<<std::endl;
         return 1;
       }
+      /*****************************************************************/
     }
-
-    /*****************************************************************/
-
 
     //send ack so that Gen2 program can recognize that the beamforming has been done
     if(ipc.send_ack() == -1){
       break;
     }
+
+
+    std::cout << "current weight : ";
+    for(int i = 0; i<ant_amount; i++){
+      std::cout << cur_weights[ant_nums[i]]<< " ";
+    }
+    std::cout << std::endl;
+
   }//end of while(1)
+
 
   //print wait
   weights_printing(cur_weights);
+
 
   return 0;
 }

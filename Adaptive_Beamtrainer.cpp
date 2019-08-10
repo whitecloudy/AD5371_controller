@@ -68,8 +68,9 @@ const std::vector<int> Adaptive_beamtrainer::getRandomWeight(void){
   //set vector for phase shift
   std::vector<int> weightVector(antNum);
   for(int i = 0; i< antNum; i++){
-    weightVector[i] = complex2Phase(randomWeightMatrix[training_count, i]);
+    weightVector[i] = complex2Phase(randomWeightMatrix(training_count, i));
   }
+
 
   if(rank(randomWeightMatrix) < training_count){    //if this is true, that means it is singular matrix
     return cannotGetRespond();
@@ -78,31 +79,44 @@ const std::vector<int> Adaptive_beamtrainer::getRandomWeight(void){
   }
 }
 
+const std::vector<int> Adaptive_beamtrainer::startTraining(void){
+  //reset all the values
+  training_count = 0;
+  randomWeightMatrix.reset();
+  isTraining = true;
+  std::cout << "RandomMatrix reset : "<<randomWeightMatrix.n_elem<<std::endl;
+
+  return getRandomWeight();
+}
+
 
 /*
  *  Handle the tag's respond
  */
 const std::vector<int> Adaptive_beamtrainer::getRespond(struct average_corr_data recvData){
-  avgCorrColumn(training_count) = std::complex<float>(recvData.avg_i,recvData.avg_q); //put received amplitude data
-  training_count++; //now we can increase training count
+  if(isTraining){
+    avgCorrColumn(training_count) = std::complex<float>(recvData.avg_i,recvData.avg_q); //put received amplitude data
+    training_count++; //now we can increase training count
 
-  if(randomWeightMatrix.is_square()){ //if it's square that means we are ready to calculate
-    //make inverse Matrix of random Weight Matrix
-    invMatrix = inv(randomWeightMatrix);
+    if(randomWeightMatrix.is_square()){ //if it's square that means we are ready to calculate
+      isTraining = false;   //training is done
 
-    arma::Col<std::complex<float>> channelGain = invMatrix * avgCorrColumn;
+      //make inverse Matrix of random Weight Matrix
+      invMatrix = inv(randomWeightMatrix);
 
-    for(int i = 0; i<antNum; i++){
-      optimalPhaseVector[i]= (360-complex2Phase(channelGain(i)));
+      arma::Col<std::complex<float>> channelGain = invMatrix * avgCorrColumn;
+
+      //calculate optimal phase vector correspond to channel gain state
+      for(int i = 0; i<antNum; i++){
+        optimalPhaseVector[i]= (360-complex2Phase(channelGain(i)));
+      }
+      return optimalPhaseVector;
+    }else{
+      //still need to training
+      return getRandomWeight();
     }
-    //reset all the values
-    training_count = 0;
-    randomWeightMatrix.reset();
-
+  }else
     return optimalPhaseVector;
-  }else{
-    return getRandomWeight();
-  }
 }
 
 /*

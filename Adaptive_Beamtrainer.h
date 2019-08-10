@@ -8,6 +8,7 @@
 class Adaptive_beamtrainer{
   private:
     int antNum;
+    bool isTraining = false;
     int training_count = 0;
 
     arma::Mat<std::complex<float>> randomWeightMatrix;
@@ -25,6 +26,8 @@ class Adaptive_beamtrainer{
 
   public:
     Adaptive_beamtrainer(int ant_num);
+
+    const std::vector<int> startTraining(void);
 
     const std::vector<int> getRandomWeight(void);
     const std::vector<int> getRespond(struct average_corr_data recvData);
