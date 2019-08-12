@@ -63,20 +63,17 @@ arma::Row<std::complex<float>> Adaptive_beamtrainer::generateRandomWeight(int ro
  */
 const std::vector<int> Adaptive_beamtrainer::getRandomWeight(void){
   //make new weight
-  randomWeightMatrix.insert_rows(training_count, generateRandomWeight(antNum));
+  
+  arma::Row<std::complex<float>> weights = generateRandomWeight(antNum);
+  //randomWeightMatrix.insert_rows(training_count, generateRandomWeight(antNum));
 
   //set vector for phase shift
   std::vector<int> weightVector(antNum);
   for(int i = 0; i< antNum; i++){
-    weightVector[i] = complex2Phase(randomWeightMatrix(training_count, i));
+    weightVector[i] = complex2Phase(weights(i));
   }
 
-
-  if(rank(randomWeightMatrix) < training_count){    //if this is true, that means it is singular matrix
-    return cannotGetRespond();
-  }else{    //if it is false we simply return
-    return weightVector;
-  }
+  return weightVector;
 }
 
 const std::vector<int> Adaptive_beamtrainer::startTraining(void){
@@ -94,36 +91,13 @@ const std::vector<int> Adaptive_beamtrainer::startTraining(void){
  *  Handle the tag's respond
  */
 const std::vector<int> Adaptive_beamtrainer::getRespond(struct average_corr_data recvData){
-  if(isTraining){
-    avgCorrColumn(training_count) = std::complex<float>(recvData.avg_i,recvData.avg_q); //put received amplitude data
-    training_count++; //now we can increase training count
-
-    if(randomWeightMatrix.is_square()){ //if it's square that means we are ready to calculate
-      isTraining = false;   //training is done
-
-      //make inverse Matrix of random Weight Matrix
-      invMatrix = inv(randomWeightMatrix);
-
-      arma::Col<std::complex<float>> channelGain = invMatrix * avgCorrColumn;
-
-      //calculate optimal phase vector correspond to channel gain state
-      for(int i = 0; i<antNum; i++){
-        optimalPhaseVector[i]= (360-complex2Phase(channelGain(i)));
-      }
-      return optimalPhaseVector;
-    }else{
-      //still need to training
-      return getRandomWeight();
-    }
-  }else
-    return optimalPhaseVector;
+  return getRandomWeight();
 }
 
 /*
  * Handle when the tag does not respond
  */
 const std::vector<int> Adaptive_beamtrainer::cannotGetRespond(void){
-  randomWeightMatrix.shed_row(training_count);  //erase last vector
   return getRandomWeight();
 }
 
