@@ -123,8 +123,15 @@ const std::vector<int> Adaptive_beamtrainer::getRespond(struct average_corr_data
  * Handle when the tag does not respond
  */
 const std::vector<int> Adaptive_beamtrainer::cannotGetRespond(void){
-  randomWeightMatrix.shed_row(training_count);  //erase last vector
-  return getRandomWeight();
+  if(isTraining){
+    randomWeightMatrix.print();
+    std::cout << training_count<<std::endl;
+
+
+    randomWeightMatrix.shed_row(training_count);  //erase last vector
+    return getRandomWeight();
+  }else
+    return optimalPhaseVector;
 }
 
 /*

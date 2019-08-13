@@ -27,6 +27,8 @@ Beamformer::Beamformer(Phase_Attenuator_controller * controller_p, int ant_amoun
   this->ant_amount = ant_amount_p;
   this->ant_nums = new int[this->ant_amount];
 
+  log.open("log.csv");
+
   memcpy(ant_nums, ant_num_p, sizeof(int)*(this->ant_amount));
 }
 
@@ -34,6 +36,7 @@ Beamformer::Beamformer(Phase_Attenuator_controller * controller_p, int ant_amoun
 
 Beamformer::~Beamformer(){
   delete this->ant_nums;
+  log.close();
 }
 
 int Beamformer::init_beamformer(void){
@@ -136,6 +139,11 @@ int Beamformer::run_beamformer(void){
       printf("avg corr : %f\n",data.avg_corr);
       printf("avg iq : %f, %f\n\n",data.avg_i, data.avg_q);
 
+      for(int i = 0; i<ant_amount; i++){
+        log<<cur_weights[ant_nums[i]]<< ", ";
+      }
+      log<<data.avg_corr<<std::endl;
+
 
       if(tag_id == PREDFINED_RN16_){
         weightVector = BWtrainer.getRespond(data);
@@ -149,6 +157,14 @@ int Beamformer::run_beamformer(void){
     }else if(data.successFlag == 0){
       printf("Couldn't get RN16\n\n");
 
+      for(int i = 0; i<ant_amount; i++){
+        log<<cur_weights[ant_nums[i]]<< ", ";
+      }
+      log<<0.0<<std::endl;
+
+
+
+
       weightVector = BWtrainer.cannotGetRespond();
       vector2cur_weights(weightVector);
       if(weights_apply(cur_weights)){
@@ -160,6 +176,7 @@ int Beamformer::run_beamformer(void){
 
     //send ack so that Gen2 program can recognize that the beamforming has been done
     if(ipc.send_ack() == -1){
+
       break;
     }
 
