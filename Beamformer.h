@@ -8,6 +8,7 @@
 #include <string>
 #include <cstdio>
 #include <thread>
+#include <fstream>
 
 
 struct average_corr_data{
@@ -23,10 +24,12 @@ class Beamformer{
   private:
     Phase_Attenuator_controller * phase_ctrl;
     IPC_controller ipc;
+    std::ofstream log;
 
     int ant_amount;
     int * ant_nums;
     int cur_weights[ANT_num] = {};
+    
 
   private:
     int weights_addition(int * dest_weights, int * weights0, int * weights1);
