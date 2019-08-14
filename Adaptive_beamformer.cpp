@@ -9,13 +9,16 @@
 
 #define PREDFINED_RN16_ 0xAAAA
 
-#define Kp 8
+#define Kp 4
 #define BETA 0.05
 #define SAME_COUNT 3
 
 struct average_corr_data{
+  char successFlag;
   char RN16[16];
   float avg_corr;
+  float avg_i;
+  float avg_q;
 };
 
 double normal_random(double mean, double std_dev){
@@ -32,6 +35,7 @@ Adaptive_beamformer::Adaptive_beamformer(Phase_Attenuator_controller * controlle
   this->phase_ctrl = controller_p;
   this->ant_amount = ant_amount_p;
   this->ant_nums = new int[this->ant_amount];
+  log.open("log.csv");
 
   memcpy(ant_nums, ant_num_p, sizeof(int)*(this->ant_amount));
 }
@@ -40,6 +44,7 @@ Adaptive_beamformer::Adaptive_beamformer(Phase_Attenuator_controller * controlle
 
 Adaptive_beamformer::~Adaptive_beamformer(){
   delete this->ant_nums;
+  log.close();
 }
 
 int Adaptive_beamformer::init_beamformer(void){
@@ -119,43 +124,68 @@ int Adaptive_beamformer::run_beamformer(void){
       tag_id += data.RN16[i];
     }
 
-    //if tag is our tag
-    if(tag_id == PREDFINED_RN16_){
-      //handle current Kp
-      Kp_corr_value[Kp_count] = data.avg_corr;
+    if(data.successFlag == 1){
 
-      std::cout << "corr : "<< data.avg_corr<<std::endl;
-      if(Kp_count > Kp){  //if Kp round is done
-        Kp_count = 0;
-        int corr_max_index = 0;
+      //if tag is our tag
+      if(tag_id == PREDFINED_RN16_){
+        //handle current Kp
+        Kp_corr_value[Kp_count] = data.avg_corr;
 
-        //find maximum correlation Kp index
-        for(int i = 0; i<=Kp; i++){
-          if(Kp_corr_value[corr_max_index] < Kp_corr_value[i])
-            corr_max_index = i;
+        std::cout << "corr : "<< data.avg_corr<<std::endl;
+        if(Kp_count > Kp){  //if Kp round is done
+          Kp_count = 0;
+          int corr_max_index = 0;
+
+          //find maximum correlation Kp index
+          for(int i = 0; i<=Kp; i++){
+            if(Kp_corr_value[corr_max_index] < Kp_corr_value[i])
+              corr_max_index = i;
+          }
+
+          if(corr_max_index == 0){
+            Kp_end_count += 1;
+            if(Kp_end_count >= SAME_COUNT)
+              break;
+          }else
+            Kp_end_count = 0;
+
+          std::cout << "< round "<<round++<<" >"<<std::endl;
+          std::cout << "max corr : "<< Kp_corr_value[corr_max_index]<<std::endl;
+          std::cout << "max index : "<< corr_max_index<<std::endl<<std::endl;
+
+
+          //modify current beamweights
+          weights_addition(cur_weights, Kp_weight_additive[corr_max_index]);
+          weights_apply(cur_weights);
+
+          for(int i = 0; i<ant_amount;i++){
+            log<<cur_weights[ant_nums[i]]<<", ";
+          }
+          log<<Kp_corr_value[corr_max_index]<<std::endl;
+
+
         }
+        else{   //if Kp round is not done yet
+          Kp_count+=1;
 
-        if(corr_max_index == 0){
-          Kp_end_count += 1;
-          if(Kp_end_count >= SAME_COUNT)
-            break;
-        }else
-          Kp_end_count = 0;
+          //make new addtive of this Kp round
+          for(int i = 0; i<ant_amount; i++){
+            Kp_weight_additive[Kp_count][ant_nums[i]] = BETA * normal_random(0, 180);
+            std::cout<<Kp_weight_additive[Kp_count][ant_nums[i]]<< " ";
+          }
 
-        std::cout << "< round "<<round++<<" >"<<std::endl;
-        std::cout << "max corr : "<< Kp_corr_value[corr_max_index]<<std::endl;
-        std::cout << "max index : "<< corr_max_index<<std::endl<<std::endl;
+          std::cout<<std::endl;
 
+          int tmp_weights[ANT_num];
+          weights_addition(tmp_weights, cur_weights, Kp_weight_additive[Kp_count]); 
+          weights_apply(tmp_weights);
 
-        //modify current beamweights
-        weights_addition(cur_weights, Kp_weight_additive[corr_max_index]);
-        weights_apply(cur_weights);
-
-
+        }
       }
-      else{   //if Kp round is not done yet
-        Kp_count+=1;
-
+    }else if(data.successFlag == 0){
+      if(startFlag){
+        init_beamformer();
+      }else{
         //make new addtive of this Kp round
         for(int i = 0; i<ant_amount; i++){
           Kp_weight_additive[Kp_count][ant_nums[i]] = BETA * normal_random(0, 180);
@@ -167,14 +197,16 @@ int Adaptive_beamformer::run_beamformer(void){
         int tmp_weights[ANT_num];
         weights_addition(tmp_weights, cur_weights, Kp_weight_additive[Kp_count]); 
         weights_apply(tmp_weights);
-
       }
-    }//end of BABF algorithm
+    }
 
+    //end of BABF algorithm
     //send ack so that Gen2 program can recognize that the beamforming has been done
     if(ipc.send_ack() == -1){
+      std::cout<<"break"<<std::endl;
       break;
     }
+
   }//end of while(1)
 
   //print wait

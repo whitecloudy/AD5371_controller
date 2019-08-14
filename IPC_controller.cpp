@@ -112,6 +112,7 @@ int IPC_controller::wait_sync(){
   std::cout<<"It is supposed to be : "<<-IPC_SYNC__<<std::endl;
 #endif
 
+  send_ack();
   if(rt == -1)
     return -1;
   else
