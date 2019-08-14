@@ -126,24 +126,31 @@ int Beamformer::run_beamformer(void){
 
     memcpy(&data, buffer, sizeof(data));
 
+
+
+    /*************************Add algorithm here***************************/
+
+
+
     if(data.successFlag == 1){
+      if(!BWtrainer.isTraining()){
+        for(int i = 0; i<ant_amount; i++){
+          log<<cur_weights[ant_nums[i]]<< ", ";
+        }
+        log<<data.avg_corr<<std::endl;
+
+        BWtrainer.startTraining();
+      }
+
 
       for(int i = 0; i<16; i++){
         tag_id = tag_id << 1;
         tag_id += data.RN16[i];
       }
 
-      /*************************Add algorithm here***************************/
-
       printf("Got RN16 : %x\n",tag_id);
       printf("avg corr : %f\n",data.avg_corr);
       printf("avg iq : %f, %f\n\n",data.avg_i, data.avg_q);
-
-      for(int i = 0; i<ant_amount; i++){
-        log<<cur_weights[ant_nums[i]]<< ", ";
-      }
-      log<<data.avg_corr<<std::endl;
-
 
       if(tag_id == PREDFINED_RN16_){
         weightVector = BWtrainer.getRespond(data);
@@ -157,13 +164,15 @@ int Beamformer::run_beamformer(void){
     }else if(data.successFlag == 0){
       printf("Couldn't get RN16\n\n");
 
-      for(int i = 0; i<ant_amount; i++){
-        log<<cur_weights[ant_nums[i]]<< ", ";
+
+      if(!BWtrainer.isTraining()){
+        for(int i = 0; i<ant_amount; i++){
+          log<<cur_weights[ant_nums[i]]<< ", ";
+        }
+        log<<0.0<<std::endl;
+
+        BWtrainer.startTraining();
       }
-      log<<0.0<<std::endl;
-
-
-
 
       weightVector = BWtrainer.cannotGetRespond();
       vector2cur_weights(weightVector);

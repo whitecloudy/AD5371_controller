@@ -8,7 +8,7 @@
 class Adaptive_beamtrainer{
   private:
     int antNum;
-    bool isTraining = false;
+    bool trainingFlag = false;
     int training_count = 0;
 
     arma::Mat<std::complex<float>> randomWeightMatrix;
@@ -34,6 +34,8 @@ class Adaptive_beamtrainer{
     const std::vector<int> cannotGetRespond(void);
 
     const bool isOptimalCalculated(void);
+    const bool isTraining(void);
+
     const std::vector<int> getOptimalPhaseVector(void);
 };
 

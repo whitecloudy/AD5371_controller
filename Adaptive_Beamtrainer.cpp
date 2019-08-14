@@ -83,10 +83,21 @@ const std::vector<int> Adaptive_beamtrainer::startTraining(void){
   //reset all the values
   training_count = 0;
   randomWeightMatrix.reset();
-  isTraining = true;
+  trainingFlag = true;
   std::cout << "RandomMatrix reset : "<<randomWeightMatrix.n_elem<<std::endl;
 
-  return getRandomWeight();
+  //if we have pre-calculated optimal phase, we use it.
+  if(isOptimalCalculated()){
+    arma::Row<std::complex<float>> optWeightVector(antNum);
+    for(int i = 0;i<antNum;i++){
+      optWeightVector(i) = phase2NormalComplex(optimalPhaseVector[i]);
+    }
+    randomWeightMatrix.insert_rows(training_count, optWeightVector);
+    return optimalPhaseVector;
+  }else{
+    //if we don't have optimal phase yet, we make new random value
+    return getRandomWeight();
+  }
 }
 
 
@@ -94,12 +105,12 @@ const std::vector<int> Adaptive_beamtrainer::startTraining(void){
  *  Handle the tag's respond
  */
 const std::vector<int> Adaptive_beamtrainer::getRespond(struct average_corr_data recvData){
-  if(isTraining){
+  if(trainingFlag){
     avgCorrColumn(training_count) = std::complex<float>(recvData.avg_i,recvData.avg_q); //put received amplitude data
     training_count++; //now we can increase training count
 
     if(randomWeightMatrix.is_square()){ //if it's square that means we are ready to calculate
-      isTraining = false;   //training is done
+      trainingFlag = false;   //training is done
 
       //make inverse Matrix of random Weight Matrix
       invMatrix = inv(randomWeightMatrix);
@@ -123,7 +134,7 @@ const std::vector<int> Adaptive_beamtrainer::getRespond(struct average_corr_data
  * Handle when the tag does not respond
  */
 const std::vector<int> Adaptive_beamtrainer::cannotGetRespond(void){
-  if(isTraining){
+  if(trainingFlag){
     randomWeightMatrix.print();
     std::cout << training_count<<std::endl;
 
@@ -134,12 +145,27 @@ const std::vector<int> Adaptive_beamtrainer::cannotGetRespond(void){
     return optimalPhaseVector;
 }
 
+
+
 /*
  * Tell that the optimal Phase Vector is exist
+ *
+ * return true if optimal Phase Vector is exist.
  */
 const bool Adaptive_beamtrainer::isOptimalCalculated(void){
   return !optimalPhaseVector.empty();
 }
+
+/*
+ * Tell that beamtrainer is training
+ *
+ * return true if it is training
+ */
+const bool Adaptive_beamtrainer::isTraining(void){
+  return trainingFlag;
+}
+
+
 
 
 const std::vector<int> Adaptive_beamtrainer::getOptimalPhaseVector(void){
