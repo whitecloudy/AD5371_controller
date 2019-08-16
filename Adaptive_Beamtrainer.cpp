@@ -11,7 +11,6 @@ Adaptive_beamtrainer::Adaptive_beamtrainer(int ant_num){
   srand(time(NULL));
 
   avgCorrColumn.set_size(antNum);
-  optimalPhaseVector.resize(antNum);
 }
 
 /*
@@ -86,6 +85,7 @@ const std::vector<int> Adaptive_beamtrainer::startTraining(void){
   trainingFlag = true;
   std::cout << "RandomMatrix reset : "<<randomWeightMatrix.n_elem<<std::endl;
 
+
   //if we have pre-calculated optimal phase, we use it.
   if(isOptimalCalculated()){
     arma::Row<std::complex<float>> optWeightVector(antNum);
@@ -95,6 +95,7 @@ const std::vector<int> Adaptive_beamtrainer::startTraining(void){
     randomWeightMatrix.insert_rows(training_count, optWeightVector);
     return optimalPhaseVector;
   }else{
+    optimalPhaseVector.resize(antNum);
     //if we don't have optimal phase yet, we make new random value
     return getRandomWeight();
   }
