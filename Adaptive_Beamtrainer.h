@@ -16,6 +16,8 @@ class Adaptive_beamtrainer{
 
     arma::Col<std::complex<float>> avgCorrColumn;
 
+    arma::Col<std::complex<float>> channelGain;
+
     std::vector<int> optimalPhaseVector;
 
   private:
@@ -37,6 +39,7 @@ class Adaptive_beamtrainer{
     const bool isTraining(void);
 
     const std::vector<int> getOptimalPhaseVector(void);
+    void printChannelGain(void);
 };
 
 #endif

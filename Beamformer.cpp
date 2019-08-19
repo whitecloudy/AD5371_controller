@@ -41,7 +41,7 @@ Beamformer::~Beamformer(){
 
 int Beamformer::init_beamformer(void){
   for(int i = 0; i < ant_amount; i++){
-    int phase = normal_random(0, 180);
+    int phase = 0;
     while(phase < 0)
       phase += 360;
     phase %= 360;
@@ -111,11 +111,8 @@ int Beamformer::run_beamformer(void){
   struct average_corr_data data;
   int round = 0;
 
-  Adaptive_beamtrainer BWtrainer(ant_amount);
 
-  std::vector<int> weightVector = BWtrainer.startTraining();
-  vector2cur_weights(weightVector);
-  weights_apply(cur_weights);
+  
 
   while(1){
 
@@ -133,23 +130,6 @@ int Beamformer::run_beamformer(void){
 
 
     if(data.successFlag == 1){
-      if(!BWtrainer.isTraining()){
-        /*
-        for(int i = 0; i<ant_amount; i++){
-          log<<cur_weights[ant_nums[i]]<< ", ";
-        }
-        log<<data.avg_corr<<", "<<data.avg_i<<", "<<data.avg_q<<std::endl;
-*/
-
-        BWtrainer.startTraining();
-      }
-      
-         for(int i = 0; i<ant_amount; i++){
-         log<<cur_weights[ant_nums[i]]<< ", ";
-         }
-         log<<data.avg_corr<<", "<<data.avg_i<<", "<<data.avg_q<<std::endl;
-         
-
       for(int i = 0; i<16; i++){
         tag_id = tag_id << 1;
         tag_id += data.RN16[i];
@@ -160,43 +140,21 @@ int Beamformer::run_beamformer(void){
       printf("avg iq : %f, %f\n\n",data.avg_i, data.avg_q);
 
       if(tag_id == PREDFINED_RN16_){
-        weightVector = BWtrainer.getRespond(data);
-        vector2cur_weights(weightVector);
-        if(weights_apply(cur_weights)){
-          std::cerr<<"weight apply failed"<<std::endl;
-          return 1;
-        }
-      }
-
-    }else if(data.successFlag == 0){
-      printf("Couldn't get RN16\n\n");
-
-
-      if(!BWtrainer.isTraining()){
-        /*
         for(int i = 0; i<ant_amount; i++){
           log<<cur_weights[ant_nums[i]]<< ", ";
         }
-        log<<0.0<<", "<<0.0<<", "<<0.0<<std::endl;
-*/
-        BWtrainer.startTraining();
+        log<<data.avg_corr<<", "<<data.avg_i<<", "<<data.avg_q<<", "<<tag_id<<std::endl;
+        if(round >= 10){
+          cur_weights[ant_nums[0]] += 10;
+          round = 0;
+        }else{
+          round++;
+        }
+      }else{  //not our RN16
       }
- 
-         for(int i = 0; i<ant_amount; i++){
-         log<<cur_weights[ant_nums[i]]<< ", ";
-         }
-         log<<0.0<<", "<<0.0<<", "<<0.0<<std::endl;
-         
-
-
-      weightVector = BWtrainer.cannotGetRespond();
-      vector2cur_weights(weightVector);
-      if(weights_apply(cur_weights)){
-        std::cerr<<"weight apply failed"<<std::endl;
-        return 1;
-      }
-      /*****************************************************************/
+    }else if(data.successFlag == 0){
     }
+    /*****************************************************************/
 
     //send ack so that Gen2 program can recognize that the beamforming has been done
     if(ipc.send_ack() == -1){

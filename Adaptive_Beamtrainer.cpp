@@ -116,7 +116,7 @@ const std::vector<int> Adaptive_beamtrainer::getRespond(struct average_corr_data
       //make inverse Matrix of random Weight Matrix
       invMatrix = inv(randomWeightMatrix);
 
-      arma::Col<std::complex<float>> channelGain = invMatrix * avgCorrColumn;
+      channelGain = invMatrix * avgCorrColumn;
 
       //calculate optimal phase vector correspond to channel gain state
       for(int i = 0; i<antNum; i++){
@@ -166,7 +166,9 @@ const bool Adaptive_beamtrainer::isTraining(void){
   return trainingFlag;
 }
 
-
+void Adaptive_beamtrainer::printChannelGain(void){
+  channelGain.print();
+}
 
 
 const std::vector<int> Adaptive_beamtrainer::getOptimalPhaseVector(void){
