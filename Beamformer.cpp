@@ -143,7 +143,7 @@ int Beamformer::run_beamformer(void){
       printf("avg corr : %f\n",data.avg_corr);
       printf("avg iq : %f, %f\n\n",data.avg_i, data.avg_q);
 
-      log<<data.avg_corr<<std::endl;
+      log<<data.avg_corr<<", "<<data.avg_i<<", "<<data.avg_q<<std::endl;
 
 
       if(tag_id == PREDFINED_RN16_){
@@ -158,7 +158,7 @@ int Beamformer::run_beamformer(void){
     }else if(data.successFlag == 0){
       printf("Couldn't get RN16\n\n");
 
-      log<<0.0<<std::endl;
+      log<<0.0<<", "<<0.0<<", "<<0.0<<std::endl;
 
       weightVector = BWtrainer.cannotGetRespond();
       vector2cur_weights(weightVector);
