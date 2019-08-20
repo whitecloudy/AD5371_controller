@@ -146,6 +146,8 @@ int Beamformer::run_beamformer(void){
         log<<data.avg_corr<<", "<<data.avg_i<<", "<<data.avg_q<<", "<<tag_id<<std::endl;
         if(round >= 10){
           cur_weights[ant_nums[0]] += 10;
+          cur_weights[ant_nums[0]] %= 360;
+          weights_apply(cur_weights);
           round = 0;
         }else{
           round++;

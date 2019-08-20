@@ -70,6 +70,7 @@ int Phase_Attenuator_controller::load_cal_data(void){
 }
 
 int preset_finder(struct cal_ref * V_preset, int start, int end, float phase){
+  
   int middle = (start + end)/2;
 
 #ifdef __DEBUG__
@@ -78,16 +79,16 @@ int preset_finder(struct cal_ref * V_preset, int start, int end, float phase){
   float minus, center, plus;
   int minus_index, center_index, plus_index;
 
-  if(middle==0){
+  if(middle==0){    //if middle is zero, left index is most right index because phase is circular
     minus_index = CAL_data_length-1;
     center_index = 0;
     plus_index = 1;
     minus = V_preset[minus_index].phase -360;
     center = V_preset[center_index].phase;
     plus = V_preset[plus_index].phase;
-  }else if(middle==CAL_data_length-1){
-    minus_index = CAL_data_length-2;
-    center_index = CAL_data_length -1;
+  }else if(middle==CAL_data_length-1){    //if middle is most right index, lef index is zero because phase is circular
+    minus_index = middle-1;
+    center_index = middle;
     plus_index = 0;
     minus = V_preset[minus_index].phase;
     center = V_preset[center_index].phase;
@@ -111,12 +112,56 @@ int preset_finder(struct cal_ref * V_preset, int start, int end, float phase){
       return center_index;
     else
       return minus_index;
+     
+
   }
 
   if(V_preset[middle].phase > phase)
     return preset_finder(V_preset, start, middle, phase);
   else
     return preset_finder(V_preset, middle+1, end, phase);
+    
+    
+  /*
+  int left_index, middle_index, right_index;
+  float left_phase, middle_phase, right_phase;
+
+  for(int i = 0; i<=end ;i++){
+    left_index = i-1;
+    middle_index = i;
+    right_index = i+1;
+
+    middle_phase = V_preset[middle_index].phase;
+
+    if(left_index == -1){
+      left_index = end;
+      left_phase = V_preset[left_index].phase - 360;
+    }else{
+      left_phase = V_preset[left_index].phase;
+    }
+
+    if(right_index == end+1){
+      right_index = 0;
+      right_phase = V_preset[right_index].phase + 360;
+    }else{
+      right_phase = V_preset[right_index].phase;
+    }
+
+    if((phase >= left_phase) && (phase < middle_phase)){
+      if(std::abs(phase - left_phase) < std::abs(middle_phase - phase))
+        return left_index;
+      else
+        return middle_index;
+    }else if((phase >= middle_phase) && (phase < right_phase)){
+      if(std::abs(phase - middle_phase) < std::abs(right_phase - phase))
+        return middle_index;
+      else
+        return right_index;
+    }
+  }
+
+  return -1;
+  */
 }
 
 int Phase_Attenuator_controller::find_matched_preset(int ant, float phase){
