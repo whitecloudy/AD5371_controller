@@ -131,6 +131,16 @@ int Adaptive_beamformer::run_beamformer(void){
         //handle current Kp
         Kp_corr_value[Kp_count] = data.avg_corr;
 
+        if(Kp_count == 0){
+
+          for(int i = 0; i<ant_amount;i++){
+            log<<cur_weights[ant_nums[i]]<<", ";
+          }
+          log<<data.avg_corr<<", "<<data.avg_i<<", "<<data.avg_q<<std::endl;
+
+
+        }
+
         std::cout << "corr : "<< data.avg_corr<<std::endl;
         if(Kp_count > Kp){  //if Kp round is done
           Kp_count = 0;
@@ -157,12 +167,6 @@ int Adaptive_beamformer::run_beamformer(void){
           //modify current beamweights
           weights_addition(cur_weights, Kp_weight_additive[corr_max_index]);
           weights_apply(cur_weights);
-
-          for(int i = 0; i<ant_amount;i++){
-            log<<cur_weights[ant_nums[i]]<<", ";
-          }
-          log<<Kp_corr_value[corr_max_index]<<std::endl;
-
 
         }
         else{   //if Kp round is not done yet
