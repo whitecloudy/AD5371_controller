@@ -134,21 +134,22 @@ int Beamformer::run_beamformer(void){
 
     if(data.successFlag == 1){
       if(!BWtrainer.isTraining()){
-        /*
+        
         for(int i = 0; i<ant_amount; i++){
           log<<cur_weights[ant_nums[i]]<< ", ";
         }
         log<<data.avg_corr<<", "<<data.avg_i<<", "<<data.avg_q<<std::endl;
-*/
+
 
         BWtrainer.startTraining();
       }
       
+      /*
          for(int i = 0; i<ant_amount; i++){
          log<<cur_weights[ant_nums[i]]<< ", ";
          }
          log<<data.avg_corr<<", "<<data.avg_i<<", "<<data.avg_q<<std::endl;
-         
+        */ 
 
       for(int i = 0; i<16; i++){
         tag_id = tag_id << 1;
@@ -173,20 +174,20 @@ int Beamformer::run_beamformer(void){
 
 
       if(!BWtrainer.isTraining()){
-        /*
+        
         for(int i = 0; i<ant_amount; i++){
           log<<cur_weights[ant_nums[i]]<< ", ";
         }
         log<<0.0<<", "<<0.0<<", "<<0.0<<std::endl;
-*/
+
         BWtrainer.startTraining();
       }
- 
+/* 
          for(int i = 0; i<ant_amount; i++){
          log<<cur_weights[ant_nums[i]]<< ", ";
          }
          log<<0.0<<", "<<0.0<<", "<<0.0<<std::endl;
-         
+  */       
 
 
       weightVector = BWtrainer.cannotGetRespond();

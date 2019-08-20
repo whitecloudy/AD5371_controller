@@ -136,9 +136,6 @@ const std::vector<int> Adaptive_beamtrainer::getRespond(struct average_corr_data
  */
 const std::vector<int> Adaptive_beamtrainer::cannotGetRespond(void){
   if(trainingFlag){
-    randomWeightMatrix.print();
-    std::cout << training_count<<std::endl;
-
 
     randomWeightMatrix.shed_row(training_count);  //erase last vector
     return getRandomWeight();
