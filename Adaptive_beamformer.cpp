@@ -9,7 +9,7 @@
 
 #define PREDFINED_RN16_ 0xAAAA
 
-#define Kp 4
+#define Kp 3
 #define BETA 0.05
 #define SAME_COUNT 3
 
