@@ -17,6 +17,7 @@ struct average_corr_data{
   float avg_corr;
   float avg_i;
   float avg_q;
+  unsigned int round;
 };
 
 

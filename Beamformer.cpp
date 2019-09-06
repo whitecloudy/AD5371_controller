@@ -116,6 +116,10 @@ int Beamformer::run_beamformer(void){
   std::vector<int> weightVector = BWtrainer.startTraining();
   vector2cur_weights(weightVector);
   weights_apply(cur_weights);
+  for(int i = 0; i<ant_amount; i++){
+    log<<"phase "<<ant_nums[i]<<", ";
+  }
+  log<<"avg corr,i,q,round"<<std::endl;
 
   while(1){
 
@@ -143,7 +147,7 @@ int Beamformer::run_beamformer(void){
       printf("avg corr : %f\n",data.avg_corr);
       printf("avg iq : %f, %f\n\n",data.avg_i, data.avg_q);
 
-      log<<data.avg_corr<<", "<<data.avg_i<<", "<<data.avg_q<<std::endl;
+      log<<data.avg_corr<<", "<<data.avg_i<<", "<<data.avg_q<<","<<data.round<<std::endl;
 
 
       if(tag_id == PREDFINED_RN16_){
@@ -158,7 +162,7 @@ int Beamformer::run_beamformer(void){
     }else if(data.successFlag == 0){
       printf("Couldn't get RN16\n\n");
 
-      log<<0.0<<", "<<0.0<<", "<<0.0<<std::endl;
+      log<<0.0<<", "<<0.0<<", "<<0.0<<","<<data.round<<std::endl;
 
       weightVector = BWtrainer.cannotGetRespond();
       vector2cur_weights(weightVector);
