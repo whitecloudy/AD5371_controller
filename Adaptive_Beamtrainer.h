@@ -11,6 +11,7 @@ class Adaptive_beamtrainer{
     bool isTraining = false;
     bool isOptimal = false;
     float avg_amp = 0.0;
+    int initial_phase;
 
     std::vector<int> optimalPhaseVector;
     std::vector<int> currentPhaseVector;

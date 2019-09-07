@@ -4,6 +4,7 @@
 #include <fstream>
 #include <sys/time.h>
 #include "Adaptive_Beamtrainer.h"
+#include "Naive_Beamtrainer.h"
 
 #define __COLLECT_DATA__
 //#define __TIME_STAMP__
@@ -28,6 +29,10 @@ Beamformer::Beamformer(Phase_Attenuator_controller * controller_p, int ant_amoun
   this->ant_nums = new int[this->ant_amount];
 
   log.open("log.csv");
+  for(int i = 0; i<ant_amount;i++){
+    log<<"Phase "<< ant_nums[i] <<",";
+  }
+  log<<"Avg amp,I,Q"<<std::endl;
 
   memcpy(ant_nums, ant_num_p, sizeof(int)*(this->ant_amount));
 }
@@ -111,7 +116,7 @@ int Beamformer::run_beamformer(void){
   struct average_corr_data data;
   int round = 0;
 
-  Adaptive_beamtrainer BWtrainer(ant_amount);
+  Naive_Beamtrainer BWtrainer(ant_amount);
 
   std::vector<int> weightVector = BWtrainer.startTraining();
   vector2cur_weights(weightVector);
@@ -131,7 +136,6 @@ int Beamformer::run_beamformer(void){
     }
 
     if(data.successFlag == 1){
-      log<<data.avg_corr<<", "<<data.avg_i<<", "<<data.avg_q<<std::endl;
 
       for(int i = 0; i<16; i++){
         tag_id = tag_id << 1;
@@ -146,16 +150,20 @@ int Beamformer::run_beamformer(void){
 
 
       if(tag_id == PREDFINED_RN16_){
+        log<<data.avg_corr<<", "<<data.avg_i<<", "<<data.avg_q<<std::endl;
+
         weightVector = BWtrainer.getRespond(data);
         vector2cur_weights(weightVector);
         if(weights_apply(cur_weights)){
           std::cerr<<"weight apply failed"<<std::endl;
           return 1;
         }
+      }else{
+        log<<0.0<<","<<0.0<<","<<0.0<<std::endl;
       }
 
     }else if(data.successFlag == 0){
-      log<<0.0<<std::endl;
+      log<<0.0<<","<<0.0<<","<<0.0<<std::endl;
       printf("Couldn't get RN16\n\n");
 
       weightVector = BWtrainer.cannotGetRespond();

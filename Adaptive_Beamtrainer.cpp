@@ -72,6 +72,7 @@ const std::vector<int> Adaptive_beamtrainer::startTraining(int initial_phase){
   //reset all the values
   isTraining = true;
 
+  this->initial_phase = initial_phase;
   currentPhaseVector.assign(antNum, initial_phase);
 
   return currentPhaseVector;

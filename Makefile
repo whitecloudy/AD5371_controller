@@ -5,7 +5,7 @@ TARGET = $(TARGET1) $(TARGET2)
 TARGET1 = beamforming
 TARGET2 = voltage_control
 LINK = -lpthread -pthread -larmadillo
-OBJECTS = SPI_communicator.o Vout_controller.o Phase_Attenuator_controller.o Beamformer.o IPC_controller.o Adaptive_Beamtrainer.o
+OBJECTS = SPI_communicator.o Vout_controller.o Phase_Attenuator_controller.o Beamformer.o IPC_controller.o Adaptive_Beamtrainer.o Naive_Beamtrainer.o
 
 all : $(TARGET) 
 
