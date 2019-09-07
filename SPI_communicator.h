@@ -23,7 +23,7 @@
 class SPI_communicator{
   private:
     int sockfd = 0; 
-    struct sockaddr_in     servaddr;
+    struct sockaddr_in     servaddr, cliaddr;
     unsigned char buf[MAXIMUM_DATA];
     unsigned int buf_count = 0;
   public:

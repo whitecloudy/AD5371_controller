@@ -1,6 +1,6 @@
 #include <iostream>
 #include "Phase_Attenuator_controller.h"
-#include "Adaptive_beamformer.h"
+#include "Beamformer.h"
 #include <cstdlib>
 #include <ctime>
 
@@ -13,6 +13,10 @@ int main(int argc, char ** argv) {
 
   int phase;
 
+  if(ant_amount == 0){
+    std::cerr << "Need Antenna number"<<std::endl;
+    return 1;
+  }
 
   for(int i = 1; i <= ant_amount; i++){
     ant_nums[i-1] = atoi(argv[i]);
@@ -56,7 +60,7 @@ int main(int argc, char ** argv) {
   
   printf("NORMAL BEAMFORMING\n\n");
 
-  Adaptive_beamformer beamformer(&ctrl, ant_amount, ant_nums);
+  Beamformer beamformer(&ctrl, ant_amount, ant_nums);
 
   if(beamformer.start_beamformer()){
     std::cout<< "Error : beamformer has terminated with error"<< std::endl;
@@ -66,8 +70,6 @@ int main(int argc, char ** argv) {
 
 #endif
 
-  std::cout << "Done"<<std::endl;
-  std::cin.get();
 
   delete(ant_nums);
   return 0;
