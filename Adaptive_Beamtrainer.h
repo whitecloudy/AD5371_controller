@@ -11,15 +11,16 @@ class Adaptive_beamtrainer{
     bool trainingFlag = false;
     int training_count = 0;
 
-    arma::Mat<std::complex<float>> randomWeightMatrix;
+    arma::Mat<std::complex<float>> trainingWeightMatrix;
     arma::Mat<std::complex<float>> invMatrix;
 
     arma::Col<std::complex<float>> avgCorrColumn;
 
-    std::vector<int> optimalPhaseVector;
+    std::vector<std::vector<int>> optimalPhaseVectors;
 
   private:
     static float complex2Phase(std::complex<float> complexData);
+    arma::Row<std::complex<float>> vector2row(std::vector<int> weightVector);
     static std::complex<float> phase2NormalComplex(float phaseData);
 
     arma::Row<std::complex<float>> generateRandomWeight(int rowSize);

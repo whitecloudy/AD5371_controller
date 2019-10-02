@@ -56,22 +56,38 @@ arma::Row<std::complex<float>> Adaptive_beamtrainer::generateRandomWeight(int ro
   return randomWeight;
 }
 
+arma::Row<std::complex<float>> Adaptive_beamtrainer::vector2row(std::vector<int> weightVector){
+  arma::Row<std::complex<float>> weightRow(antNum);
+  for(int i = 0; i<antNum; i++){
+    weightRow(i) = phase2NormalComplex(weightVector[i]);
+  }
+
+  return weightRow;
+}
+
 
 /*
  * Set New RandomWeight on the last matrix row
  */
 const std::vector<int> Adaptive_beamtrainer::getRandomWeight(void){
-  //make new weight
-  randomWeightMatrix.insert_rows(training_count, generateRandomWeight(antNum));
-
-  //set vector for phase shift
   std::vector<int> weightVector(antNum);
-  for(int i = 0; i< antNum; i++){
-    weightVector[i] = complex2Phase(randomWeightMatrix(training_count, i));
+
+  //if we have a trained weight Vector;
+  if(training_count < optimalPhaseVectors.size()){
+    weightVector = optimalPhaseVectors[optimalPhaseVectors.size() - training_count - 1];
+    trainingWeightMatrix.insert_rows(training_count, vector2row(weightVector));
+  }else{
+    //make new weight
+    trainingWeightMatrix.insert_rows(training_count, generateRandomWeight(antNum));
+
+    //set vector for phase shift
+    for(int i = 0; i< antNum; i++){
+      weightVector[i] = complex2Phase(trainingWeightMatrix(training_count, i));
+    }
   }
 
 
-  if(rank(randomWeightMatrix) < training_count){    //if this is true, that means it is singular matrix
+  if(rank(trainingWeightMatrix) < training_count){    //if this is true, that means it is singular matrix
     return cannotGetRespond();
   }else{    //if it is false we simply return
     return weightVector;
@@ -81,24 +97,12 @@ const std::vector<int> Adaptive_beamtrainer::getRandomWeight(void){
 const std::vector<int> Adaptive_beamtrainer::startTraining(void){
   //reset all the values
   training_count = 0;
-  randomWeightMatrix.reset();
+  trainingWeightMatrix.reset();
   trainingFlag = true;
-  std::cout << "RandomMatrix reset : "<<randomWeightMatrix.n_elem<<std::endl;
+  std::cout << "RandomMatrix reset : "<<trainingWeightMatrix.n_elem<<std::endl;
 
-
-  //if we have pre-calculated optimal phase, we use it.
-  if(isOptimalCalculated()){
-    arma::Row<std::complex<float>> optWeightVector(antNum);
-    for(int i = 0;i<antNum;i++){
-      optWeightVector(i) = phase2NormalComplex(optimalPhaseVector[i]);
-    }
-    randomWeightMatrix.insert_rows(training_count, optWeightVector);
-    return optimalPhaseVector;
-  }else{
-    optimalPhaseVector.resize(antNum);
-    //if we don't have optimal phase yet, we make new random value
-    return getRandomWeight();
-  }
+  //if we don't have optimal phase yet, we make new random value
+  return getRandomWeight();
 }
 
 
@@ -110,11 +114,13 @@ const std::vector<int> Adaptive_beamtrainer::getRespond(struct average_corr_data
     avgCorrColumn(training_count) = std::complex<float>(recvData.avg_i,recvData.avg_q); //put received amplitude data
     training_count++; //now we can increase training count
 
-    if(randomWeightMatrix.is_square()){ //if it's square that means we are ready to calculate
+    if(trainingWeightMatrix.is_square()){ //if it's square that means we are ready to calculate
+      std::vector<int> optimalPhaseVector(antNum);
+
       trainingFlag = false;   //training is done
 
       //make inverse Matrix of random Weight Matrix
-      invMatrix = inv(randomWeightMatrix);
+      invMatrix = inv(trainingWeightMatrix);
 
       arma::Col<std::complex<float>> channelGain = invMatrix * avgCorrColumn;
 
@@ -122,13 +128,14 @@ const std::vector<int> Adaptive_beamtrainer::getRespond(struct average_corr_data
       for(int i = 0; i<antNum; i++){
         optimalPhaseVector[i]= (360-complex2Phase(channelGain(i)));
       }
+      optimalPhaseVectors.push_back(optimalPhaseVector);
       return optimalPhaseVector;
     }else{
       //still need to training
       return getRandomWeight();
     }
   }else
-    return optimalPhaseVector;
+    return optimalPhaseVectors.back();
 }
 
 /*
@@ -136,11 +143,10 @@ const std::vector<int> Adaptive_beamtrainer::getRespond(struct average_corr_data
  */
 const std::vector<int> Adaptive_beamtrainer::cannotGetRespond(void){
   if(trainingFlag){
-
-    randomWeightMatrix.shed_row(training_count);  //erase last vector
+    trainingWeightMatrix.shed_row(training_count);  //erase last vector
     return getRandomWeight();
   }else
-    return optimalPhaseVector;
+    return optimalPhaseVectors.back();
 }
 
 
@@ -151,7 +157,7 @@ const std::vector<int> Adaptive_beamtrainer::cannotGetRespond(void){
  * return true if optimal Phase Vector is exist.
  */
 const bool Adaptive_beamtrainer::isOptimalCalculated(void){
-  return !optimalPhaseVector.empty();
+  return !optimalPhaseVectors.empty();
 }
 
 /*
@@ -167,5 +173,5 @@ const bool Adaptive_beamtrainer::isTraining(void){
 
 
 const std::vector<int> Adaptive_beamtrainer::getOptimalPhaseVector(void){
-  return optimalPhaseVector;
+  return optimalPhaseVectors.back();
 }
