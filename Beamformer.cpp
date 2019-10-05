@@ -9,7 +9,7 @@
 //#define __TIME_STAMP__
 
 #define PREDFINED_RN16_ 0xAAAA
-#define AVG_ROUND_      1
+#define AVG_ROUND_      5
 
 
 
