@@ -30,6 +30,7 @@ class Adaptive_beamtrainer{
 
     const std::vector<int> startTraining(void);
 
+    const std::vector<int> getTrainingWeight(void);
     const std::vector<int> getRandomWeight(void);
     const std::vector<int> getRespond(struct average_corr_data recvData);
     const std::vector<int> getRespond(struct average_corr_data recvData, const std::vector<int> masterVector);
