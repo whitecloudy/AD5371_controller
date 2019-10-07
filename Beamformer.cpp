@@ -146,17 +146,17 @@ int Beamformer::run_beamformer(void){
     trainer[i].weightVector = trainer[i].BWtrainer->startTraining();
   }
 
+  //Apply Beamforming weight
+  vector2cur_weights(trainer[0].weightVector);
+  if(weights_apply(cur_weights)){
+    std::cerr<<"weight apply failed"<<std::endl;
+    return 1;
+  }
+
 
   while(1){
 
     for(int tag_turn = 0; tag_turn<TAG_COUNT_; tag_turn++){
-
-      vector2cur_weights(trainer[tag_turn].weightVector);
-      if(weights_apply(cur_weights)){
-        std::cerr<<"weight apply failed"<<std::endl;
-        return 1;
-      }
-
 
       if(ipc.data_recv(buffer) == -1){
         std::cerr <<"Breaker is activated"<<std::endl;
@@ -231,6 +231,13 @@ int Beamformer::run_beamformer(void){
       }
 
       /***********************************************************************************************/
+
+      //Apply Beamforming weight
+      vector2cur_weights(trainer[(tag_turn+1)%TAG_COUNT_].weightVector);
+      if(weights_apply(cur_weights)){
+        std::cerr<<"weight apply failed"<<std::endl;
+        return 1;
+      }
 
       //send ack so that Gen2 program can recognize that the beamforming has been done
       if(ipc.send_ack() == -1){
