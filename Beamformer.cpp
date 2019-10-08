@@ -179,7 +179,7 @@ int Beamformer::run_beamformer(void){
           for(int i = 0; i<ant_amount; i++){
             log<<cur_weights[ant_nums[i]]<< ", ";
           }
-          log<<data.avg_corr<<", "<<data.avg_i<<", "<<data.avg_q<<std::endl;
+          log<<data.avg_corr<<", "<<data.avg_i<<", "<<data.avg_q<<", "<<tag_id<<std::endl;
 
           trainer[tag_turn].BWtrainer->startTraining();
         }
