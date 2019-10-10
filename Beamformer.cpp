@@ -11,6 +11,7 @@
 #define PREDFINED_RN16_ 0xAAAA
 #define TAG_COUNT_      2
 #define AVG_ROUND_      5
+#define MAX_ROUND_      16000
 
 
 
@@ -115,147 +116,66 @@ int Beamformer::run_beamformer(void){
 
 
   struct Beamtrainer_pack{
-    Adaptive_beamtrainer * BWtrainer;
     int avg_round_counter = 0;
     int respond_counter = 0;
     double avg_i_value = 0.0;
     double avg_q_value = 0.0;
     double avg_corr_value = 0.0;    
     uint16_t predefined_RN16;
-    std::vector<int> weightVector;
-
-    Beamtrainer_pack(int ant_amount, uint16_t RN16){
-      init(ant_amount, RN16);
-    }
-
-    Beamtrainer_pack(void){
-    }
-
-    int init(int ant_amount, uint16_t RN16){
-      BWtrainer = new Adaptive_beamtrainer(ant_amount);
-      predefined_RN16 = RN16;
-    }
-
-    ~Beamtrainer_pack(){
-      delete(BWtrainer);
-    }
   } trainer[TAG_COUNT_];
 
-  for(int i = 0; i<TAG_COUNT_;i++){
-    trainer[i].init(ant_amount,i);
-    trainer[i].weightVector = trainer[i].BWtrainer->startTraining();
-  }
   trainer[0].predefined_RN16 = 0xAAAA;
   trainer[1].predefined_RN16 = 0x5555;
 
-  //Apply Beamforming weight
-  vector2cur_weights(trainer[0].weightVector);
-  if(weights_apply(cur_weights)){
-    std::cerr<<"weight apply failed"<<std::endl;
-    return 1;
-  }
-
 
   while(1){
-
-    for(int tag_turn = 0; tag_turn<TAG_COUNT_; tag_turn++){
-
-      if(ipc.data_recv(buffer) == -1){
-        std::cerr <<"Breaker is activated"<<std::endl;
-        return 0;   
-      } 
-
-      memcpy(&data, buffer, sizeof(data));
-
-      /***************************************Add algorithm here**************************************/
-
-      trainer[tag_turn].avg_round_counter++;
-
-      for(int i = 0; i<16; i++){
-        tag_id = tag_id << 1;
-        tag_id += data.RN16[i];
+    for(int round = 0; round<MAX_ROUND_; round++){
+      int ant_turn = round/(MAX_ROUND_/ant_amount);
+      
+      for(int ant_i = 0; ant_i<ant_amount;ant_i++){
+        if(ant_i == ant_turn){
+          phase_ctrl->phase_control(ant_nums[ant_i], 0);
+        }else{
+          phase_ctrl->ant_off(ant_nums[ant_i]);
+        }
       }
 
-      if((data.successFlag == 1) && (tag_id ==  trainer[tag_turn].predefined_RN16)){   //if we get proper respond
-        if(!trainer[tag_turn].BWtrainer->isTraining()){
-          for(int i = 0; i<ant_amount; i++){
-            log<<cur_weights[ant_nums[i]]<< ", ";
-          }
-          log<<data.avg_corr<<", "<<data.avg_i<<", "<<data.avg_q<<", "<<tag_id<<std::endl;
+      for(int tag_turn = 0; tag_turn<TAG_COUNT_; tag_turn++){
+        if(ipc.data_recv(buffer) == -1){
+          std::cerr <<"Breaker is activated"<<std::endl;
+          return 0;   
+        } 
 
-          trainer[tag_turn].BWtrainer->startTraining();
+        memcpy(&data, buffer, sizeof(data));
+
+        /***************************************Add algorithm here**************************************/
+
+        for(int i = 0; i<16; i++){
+          tag_id = tag_id << 1;
+          tag_id += data.RN16[i];
         }
 
-        printf("Got RN16 : %x\n",tag_id);
-        printf("avg corr : %f\n",data.avg_corr);
-        printf("avg iq : %f, %f\n\n",data.avg_i, data.avg_q);
+        if((data.successFlag == 1) && (tag_id ==  trainer[tag_turn].predefined_RN16)){   //if we get proper respond
+          log<<ant_nums[ant_turn]<<","<<data.avg_corr<<", "<<data.avg_i<<", "<<data.avg_q<<", "<<tag_id<<std::endl;
 
-        trainer[tag_turn].respond_counter++;
-        trainer[tag_turn].avg_i_value += data.avg_i;
-        trainer[tag_turn].avg_q_value += data.avg_q;
-        trainer[tag_turn].avg_corr_value += data.avg_corr;
-
-      }else if((data.successFlag == 0)||(tag_id !=  trainer[tag_turn].predefined_RN16)){ //if we coundn't get proper respond
-        printf("Couldn't get RN16\n\n");
-	std::cout << tag_id<<std::endl;
-
-        if(!trainer[tag_turn].BWtrainer->isTraining()){
-          for(int i = 0; i<ant_amount; i++){
-            log<<cur_weights[ant_nums[i]]<< ", ";
-          }
-          log<<0.0<<", "<<0.0<<", "<<0.0<<std::endl;
-
-          trainer[tag_turn].BWtrainer->startTraining();
-        }
-      }else{
-        std::cerr << "IPC data is not valid"<<std::endl;
-        break;
-      }
-
-
-      //if we reached enough measurement count
-      if(trainer[tag_turn].avg_round_counter >= AVG_ROUND_){
-        if(trainer[tag_turn].respond_counter != 0){   //if we could get an least one proper respond
-          data.avg_i =  trainer[tag_turn].avg_i_value/trainer[tag_turn].respond_counter;
-          data.avg_q =  trainer[tag_turn].avg_q_value/trainer[tag_turn].respond_counter;
-          data.avg_corr =  trainer[tag_turn].avg_corr_value/trainer[tag_turn].respond_counter;
-
-          trainer[tag_turn].weightVector =  trainer[tag_turn].BWtrainer->getRespond(data);
-        }else{    //if we couldn't get any proper respond
-          trainer[tag_turn].weightVector =  trainer[tag_turn].BWtrainer->cannotGetRespond();
+          printf("Got RN16 : %x\n",tag_id);
+          printf("avg corr : %f\n",data.avg_corr);
+          printf("avg iq : %f, %f\n\n",data.avg_i, data.avg_q);
+        }else if((data.successFlag == 0)||(tag_id !=  trainer[tag_turn].predefined_RN16)){ //if we coundn't get proper respond
+          printf("Couldn't get RN16\n\n");
+        }else{
+          std::cerr << "IPC data is not valid"<<std::endl;
+          break;
         }
 
-        //initialize all values
-        trainer[tag_turn].avg_i_value = 0;
-        trainer[tag_turn].avg_q_value = 0;
-        trainer[tag_turn].avg_corr_value = 0;
-        trainer[tag_turn].avg_round_counter = 0;
-        trainer[tag_turn].respond_counter = 0;
+
+        //send ack so that Gen2 program can recognize that the beamforming has been done
+        if(ipc.send_ack() == -1){
+
+          break;
+        }
       }
-
-      /***********************************************************************************************/
-
-      //Apply Beamforming weight
-      vector2cur_weights(trainer[(tag_turn+1)%TAG_COUNT_].weightVector);
-      if(weights_apply(cur_weights)){
-        std::cerr<<"weight apply failed"<<std::endl;
-        return 1;
-      }
-
-      //send ack so that Gen2 program can recognize that the beamforming has been done
-      if(ipc.send_ack() == -1){
-
-        break;
-      }
-
-
-      std::cout << "current weight : ";
-      for(int i = 0; i<ant_amount; i++){
-        std::cout << cur_weights[ant_nums[i]]<< " ";
-      }
-      std::cout << std::endl;
     }
-
   }//end of while(1)
 
 
