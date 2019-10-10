@@ -145,6 +145,8 @@ int Beamformer::run_beamformer(void){
     trainer[i].init(ant_amount,i);
     trainer[i].weightVector = trainer[i].BWtrainer->startTraining();
   }
+  trainer[0].predefined_RN16 = 0xAAAA;
+  trainer[1].predefined_RN16 = 0x5555;
 
   //Apply Beamforming weight
   vector2cur_weights(trainer[0].weightVector);
@@ -160,7 +162,7 @@ int Beamformer::run_beamformer(void){
 
       if(ipc.data_recv(buffer) == -1){
         std::cerr <<"Breaker is activated"<<std::endl;
-        break;   
+        return 0;   
       } 
 
       memcpy(&data, buffer, sizeof(data));
@@ -195,6 +197,7 @@ int Beamformer::run_beamformer(void){
 
       }else if((data.successFlag == 0)||(tag_id !=  trainer[tag_turn].predefined_RN16)){ //if we coundn't get proper respond
         printf("Couldn't get RN16\n\n");
+	std::cout << tag_id<<std::endl;
 
         if(!trainer[tag_turn].BWtrainer->isTraining()){
           for(int i = 0; i<ant_amount; i++){
