@@ -129,9 +129,9 @@ int Beamformer::run_beamformer(void){
 
 
   while(1){
-    for(int round = 0; round<MAX_ROUND_; round++){
+    for(int round = 0; round<MAX_ROUND_;){
       int ant_turn = round/(MAX_ROUND_/ant_amount);
-      
+
       for(int ant_i = 0; ant_i<ant_amount;ant_i++){
         if(ant_i == ant_turn){
           phase_ctrl->phase_control(ant_nums[ant_i], 0);
@@ -140,44 +140,46 @@ int Beamformer::run_beamformer(void){
         }
       }
 
-      for(int tag_turn = 0; tag_turn<TAG_COUNT_; tag_turn++){
-        if(ipc.data_recv(buffer) == -1){
-          std::cerr <<"Breaker is activated"<<std::endl;
-          return 0;   
-        } 
+      std::cout <<round<<" "<< ant_turn << std::endl;
+      phase_ctrl->data_apply();
 
-        memcpy(&data, buffer, sizeof(data));
+      round++;
+      if(ipc.data_recv(buffer) == -1){
+        std::cerr <<"Breaker is activated"<<std::endl;
+        return 0;   
+      } 
 
-        /***************************************Add algorithm here**************************************/
+      memcpy(&data, buffer, sizeof(data));
 
-        for(int i = 0; i<16; i++){
-          tag_id = tag_id << 1;
-          tag_id += data.RN16[i];
-        }
+      /***************************************Add algorithm here**************************************/
 
-        if((data.successFlag == 1) && (tag_id ==  trainer[tag_turn].predefined_RN16)){   //if we get proper respond
-          log<<ant_nums[ant_turn]<<","<<data.avg_corr<<", "<<data.avg_i<<", "<<data.avg_q<<", "<<tag_id<<std::endl;
+      for(int i = 0; i<16; i++){
+        tag_id = tag_id << 1;
+        tag_id += data.RN16[i];
+      }
 
-          printf("Got RN16 : %x\n",tag_id);
-          printf("avg corr : %f\n",data.avg_corr);
-          printf("avg iq : %f, %f\n\n",data.avg_i, data.avg_q);
-        }else if((data.successFlag == 0)||(tag_id !=  trainer[tag_turn].predefined_RN16)){ //if we coundn't get proper respond
-          printf("Couldn't get RN16\n\n");
-        }else{
-          std::cerr << "IPC data is not valid"<<std::endl;
-          break;
-        }
+      if((data.successFlag == 1) && (tag_id ==  trainer[data.round%2].predefined_RN16)){   //if we get proper respond
+        log<<ant_nums[ant_turn]<<","<<data.avg_corr<<", "<<data.avg_i<<", "<<data.avg_q<<", "<<tag_id<<","<<round<<std::endl;
+
+        printf("Got RN16 : %x\n",tag_id);
+        printf("avg corr : %f\n",data.avg_corr);
+        printf("avg iq : %f, %f\n\n",data.avg_i, data.avg_q);
+      }else if((data.successFlag == 0)||(tag_id !=  trainer[data.round%2].predefined_RN16)){ //if we coundn't get proper respond
+        printf("Couldn't get RN16\n");
+        printf("tag_id : %d\n\n",tag_id);
+      }else{
+        std::cerr << "IPC data is not valid"<<std::endl;
+        break;
+      }
 
 
-        //send ack so that Gen2 program can recognize that the beamforming has been done
-        if(ipc.send_ack() == -1){
+      //send ack so that Gen2 program can recognize that the beamforming has been done
+      if(ipc.send_ack() == -1){
 
-          break;
-        }
+        break;
       }
     }
   }//end of while(1)
-
 
   //print wait
   weights_printing(cur_weights);
