@@ -60,11 +60,43 @@ arma::Row<std::complex<float>> Adaptive_beamtrainer::generateRandomWeight(int ro
 
 
 /*
+ * make row to vector
+ *
+ *
+ *
+ */
+const std::vector<int> Adaptive_beamtrainer::row2Vector(arma::Row<std::complex<float>> row){
+  int size = row.n_cols;
+  std::vector<int> rowVector(size, 0);
+
+  for(int i = 0; i< size; i++){
+    rowVector[i] = complex2Phase(row(i));
+  }
+
+  return rowVector;
+}
+
+
+
+
+/*
  * Set New RandomWeight on the last matrix row
  */
 const std::vector<int> Adaptive_beamtrainer::getNextWeight(void){
+  if(phaseRoundCount < BaseNum){
+    currentPhaseVector[currentTrainingAnt] = (currentPhaseVector[currentTrainingAnt] + 360/BaseNum)%360;
+    phaseRoundCount++;
+  }else{
+    currentPhaseVector[currentTrainingAnt] = bestPhase;
+    currentTrainingAnt++;
+    phaseRoundCount = 0;
 
-  //Empty place
+    if(currentTrainingAnt >= antNum){
+      optimalPhaseVector = currentPhaseVector;
+      isTraining = false;
+    }
+  }
+
   return currentPhaseVector;
 }
 
@@ -72,7 +104,8 @@ const std::vector<int> Adaptive_beamtrainer::startTraining(int initial_phase){
   //reset all the values
   isTraining = true;
 
-  this->initial_phase = initial_phase;
+  currentPhaseVector = row2Vector(generateRandomWeight(antNum));
+
   currentPhaseVector.assign(antNum, initial_phase);
 
   return currentPhaseVector;
@@ -84,8 +117,18 @@ const std::vector<int> Adaptive_beamtrainer::startTraining(int initial_phase){
  */
 const std::vector<int> Adaptive_beamtrainer::getRespond(struct average_corr_data recvData){
   if(isTraining){
-
-    //Empty place
+    if(!isRespond){
+      isRespond = true;
+      currentTrainingAnt = 0;
+      phaseRoundCount = 0;
+    }else{
+      double currentPhasePower = pow(recvData.avg_i,2)+pow(recvData.avg_q,2);
+      if(currentPhasePower>bestPhasePower){
+        bestPhasePower = currentPhasePower;
+        bestPhase = currentPhaseVector[currentTrainingAnt];
+      }
+      getNextWeight();
+    }
     return currentPhaseVector;
   }
   else
@@ -97,8 +140,11 @@ const std::vector<int> Adaptive_beamtrainer::getRespond(struct average_corr_data
  */
 const std::vector<int> Adaptive_beamtrainer::cannotGetRespond(void){
   if(isTraining){
-
-    //Empty place
+    if(isRespond){
+      getNextWeight();
+    }else{
+      currentPhaseVector = row2Vector(generateRandomWeight(antNum));
+    }
     return currentPhaseVector;
   }else
     return optimalPhaseVector;
