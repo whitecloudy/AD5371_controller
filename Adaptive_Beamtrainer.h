@@ -8,9 +8,9 @@
 class Adaptive_beamtrainer{
   protected:
     int antNum;
-    bool isTraining = false;
-    bool isRespond = false;
-    bool isOptimal = false;
+    bool trainingFlag = false;
+    bool respondFlag = false;
+    bool optimalFlag = false;
     float avg_amp = 0.0;
     int currentTrainingAnt = 0;
     int phaseRoundCount = 0;
@@ -29,7 +29,6 @@ class Adaptive_beamtrainer{
 
     arma::Row<std::complex<float>> generateRandomWeight(int rowSize);
     virtual const std::vector<int> getNextWeight(void);
-
   public:
     Adaptive_beamtrainer(int ant_num);
 
@@ -40,6 +39,7 @@ class Adaptive_beamtrainer{
 
     const bool isOptimalCalculated(void);
     const std::vector<int> getOptimalPhaseVector(void);
+    const bool isTraining(void);
 };
 
 #endif

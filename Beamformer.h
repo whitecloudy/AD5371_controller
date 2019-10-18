@@ -26,7 +26,6 @@ class Beamformer{
     IPC_controller ipc;
     std::ofstream log;
 
-
     int ant_amount;
     int * ant_nums;
     int cur_weights[ANT_num] = {};

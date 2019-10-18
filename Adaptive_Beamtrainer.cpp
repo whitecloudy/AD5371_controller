@@ -93,7 +93,8 @@ const std::vector<int> Adaptive_beamtrainer::getNextWeight(void){
 
     if(currentTrainingAnt >= antNum){
       optimalPhaseVector = currentPhaseVector;
-      isTraining = false;
+      trainingFlag = false;
+      optimalFlag = true;
     }
   }
 
@@ -102,7 +103,7 @@ const std::vector<int> Adaptive_beamtrainer::getNextWeight(void){
 
 const std::vector<int> Adaptive_beamtrainer::startTraining(int initial_phase){
   //reset all the values
-  isTraining = true;
+  trainingFlag = true;
 
   currentPhaseVector = row2Vector(generateRandomWeight(antNum));
 
@@ -116,9 +117,9 @@ const std::vector<int> Adaptive_beamtrainer::startTraining(int initial_phase){
  *  Handle the tag's respond
  */
 const std::vector<int> Adaptive_beamtrainer::getRespond(struct average_corr_data recvData){
-  if(isTraining){
-    if(!isRespond){
-      isRespond = true;
+  if(trainingFlag){
+    if(!respondFlag){
+      respondFlag = true;
       currentTrainingAnt = 0;
       phaseRoundCount = 0;
     }else{
@@ -132,21 +133,21 @@ const std::vector<int> Adaptive_beamtrainer::getRespond(struct average_corr_data
     return currentPhaseVector;
   }
   else
-    return optimalPhaseVector;
+   return optimalPhaseVector;
 }
 
 /*
  * Handle when the tag does not respond
  */
 const std::vector<int> Adaptive_beamtrainer::cannotGetRespond(void){
-  if(isTraining){
-    if(isRespond){
+  if(trainingFlag){
+    if(respondFlag){
       getNextWeight();
     }else{
       currentPhaseVector = row2Vector(generateRandomWeight(antNum));
     }
     return currentPhaseVector;
-  }else
+ }else
     return optimalPhaseVector;
 }
 
@@ -154,8 +155,20 @@ const std::vector<int> Adaptive_beamtrainer::cannotGetRespond(void){
  * Tell that the optimal Phase Vector is exist
  */
 const bool Adaptive_beamtrainer::isOptimalCalculated(void){
-  return isOptimal;
+  return optimalFlag;
 }
+
+
+/*
+ * Tell that beamtrainer is training
+ *
+ * return true if it is training
+ */
+const bool Adaptive_beamtrainer::isTraining(void){
+  return trainingFlag;
+}
+
+
 
 
 const std::vector<int> Adaptive_beamtrainer::getOptimalPhaseVector(void){
