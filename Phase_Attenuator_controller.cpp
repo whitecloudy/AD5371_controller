@@ -157,9 +157,9 @@ int Phase_Attenuator_controller::phase_setup(int ant, int index){
 int Phase_Attenuator_controller::phase_control(int ant, int phase){
   int index = voltage_index_search(ant, phase);
 
-  //fprintf(stderr,"index : %d\n\n",index);
-  //fprintf(stderr,"att voltage = %f\n\n",V_preset[ant][100].po_V);
-  //fprintf(stderr,"pha voltage = %f\n\n",V_preset[ant][100].ph_V);
+  fprintf(stderr,"index : %d\n\n",index);
+  fprintf(stderr,"att voltage = %f\n\n",V_preset[ant][index].po_V);
+  fprintf(stderr,"pha voltage = %f\n\n",V_preset[ant][index].ph_V);
   return phase_setup(ant, index);
 }
 

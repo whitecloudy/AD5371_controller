@@ -4,7 +4,8 @@
 #include <cstdlib>
 #include <ctime>
 
-#define __NORMAL_BEAMFORMING__
+#define __TEST_BEAMFORMING__
+//#define __NORMAL_BEAMFORMING__
 
 int main(int argc, char ** argv) {
   int ant_amount = argc - 1;
@@ -20,10 +21,10 @@ int main(int argc, char ** argv) {
 
   for(int i = 1; i <= ant_amount; i++){
     ant_nums[i-1] = atoi(argv[i]);
-    ctrl.ant_off(ant_nums[i-1]);
+    //ctrl.ant_off(ant_nums[i-1]);
   }
 
-  ctrl.data_apply();
+  //ctrl.data_apply();
 
   //do test beamforming
 #ifdef __TEST_BEAMFORMING__
