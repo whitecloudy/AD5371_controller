@@ -6,7 +6,6 @@
 
 SPI_communicator::SPI_communicator(int channel, int kHz_speed, int mode){
   std::cout<<"SPI communicator initialize"<<std::endl;
- // spi_fd = wiringPiSPISetupMode(channel, kHz_speed*1000, mode);
 
   uint16_t divider = 400000/kHz_speed;
 
@@ -46,25 +45,25 @@ SPI_communicator::SPI_communicator(int channel, int kHz_speed, int mode){
   bcm2835_spi_chipSelect(BCM2835_SPI_CS0);       
   bcm2835_spi_setChipSelectPolarity(BCM2835_SPI_CS0, LOW);
 
+  log.open("log.txt");
+
 }
 
 SPI_communicator::~SPI_communicator(){
   bcm2835_spi_end();
 	bcm2835_close();
-  //close(spi_fd);
+  log.close();
 }
 
 int SPI_communicator::transmit(char * buffer, int size){
   bcm2835_spi_transfern(buffer, size);
 
-  /*
-     int result = write(spi_fd, buffer, size);
+  for(int i = 0; i< size; i++){
+    log<<(unsigned int)buffer[i]<<", ";
+  }
+  log<<size<<std::endl;
 
-     if(DEBUG)
-     std::cout<<(int)buffer[0]<<" "<<(int)buffer[1]<<" "<<(int)buffer[2]<<std::endl;
-     if(result != size)
-     return 1;
-     */
+  
   return 0;
 }
 

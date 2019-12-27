@@ -29,7 +29,7 @@ void signalHandler(int error){
   exit(1);
 }
 
-//#define __DEBUG__
+#define __DEBUG__
 int main(int argc, char** argv) { 
   int sockfd;
   int spi_speed = 0;
@@ -78,36 +78,39 @@ int main(int argc, char** argv) {
 
   while(running){
     int len = sizeof(struct sockaddr_in);
-      
-      int n;
+
+    int n;
 
     std::cout <<"Running!"<<std::endl;
     n = recvfrom(sockfd, buffer, MAXLINE, MSG_WAITALL, (struct sockaddr *) &cliaddr,(socklen_t *) &len); 
 
-    if(n<=0)
-      break;
 #ifdef __DEBUG__
     printf("received packet byte : %d\n",n);
 #endif
 
+
+
+    if(n<=0)
+      break;
 
     std::cout<< n <<std::endl;
     for(int i = 0; i<n; i+=3){
       //    sync.give_signal();
       spi_comm.transmit(&buffer[i], 3);
 #ifdef __DEBUG__
-      printf("sended data : %d %d %d\n",buffer[i],buffer[i+1],buffer[i+2]);
+      printf("sended data : %ud %ud %ud\n",buffer[i],buffer[i+1],buffer[i+2]);
 #endif
     }
 
 
     ldac.give_signal();
     sendto(sockfd, &n, sizeof(int), MSG_CONFIRM, (const struct sockaddr *)&cliaddr, sizeof(cliaddr));
- 
- }
+
+  }
 
   close(sockfd);
 
+  printf("what happend?");
 
   return 0; 
 } 
