@@ -15,7 +15,6 @@ int main(int argc, char * argv[]){
   int apply_result = 0;
   for(int i = 0; i<vout_number; i++){
     modify_result = vout.voltage_modify(i, volt);
-
   }
   apply_result = vout.data_apply();
 

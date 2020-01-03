@@ -9,7 +9,7 @@
 //#define __TIME_STAMP__
 
 #define PREDFINED_RN16_ 0xAAAA
-#define TAG_COUNT_      2
+#define TAG_COUNT_      1
 #define AVG_ROUND_      5
 
 
@@ -146,7 +146,7 @@ int Beamformer::run_beamformer(void){
     trainer[i].weightVector = trainer[i].BWtrainer->startTraining();
   }
   trainer[0].predefined_RN16 = 0xAAAA;
-  trainer[1].predefined_RN16 = 0x5555;
+  //trainer[1].predefined_RN16 = 0x5555;
 
   //Apply Beamforming weight
   vector2cur_weights(trainer[0].weightVector);
