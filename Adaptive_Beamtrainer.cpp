@@ -149,8 +149,10 @@ const std::vector<int> Adaptive_beamtrainer::getRespond(struct average_corr_data
 
 			//calculate optimal phase vector correspond to channel gain state
 			for(int i = 0; i<antNum; i++){
+        std::cout << channelGain(i) << " ";
 				optimalPhaseVector[i]= (360-complex2Phase(channelGain(i)));
 			}
+      std::cout << std::endl;
 			optimalPhaseVectors.push_back(optimalPhaseVector);
 			return optimalPhaseVector;
 		}else{
