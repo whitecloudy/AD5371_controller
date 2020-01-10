@@ -45,13 +45,16 @@ Beamformer::~Beamformer(){
 }
 
 int Beamformer::init_beamformer(void){
+  std::cout << "Insert Phase" <<std::endl;
   for(int i = 0; i < ant_amount; i++){
-    int phase = normal_random(0, 180);
+    int phase = 0;
+    std::cin >> phase;
     while(phase < 0)
       phase += 360;
     phase %= 360;
 
     cur_weights[ant_nums[i]] = phase;
+    std::cout << "Ant "<<ant_nums[i]<<": "<<phase<<std::endl;
   }
 
   return weights_apply(cur_weights);
