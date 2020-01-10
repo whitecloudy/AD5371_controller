@@ -16,6 +16,8 @@ class Adaptive_beamtrainer{
 
     arma::Col<std::complex<float>> avgCorrColumn;
 
+    arma::Col<std::complex<float>> channelGain;
+
     std::vector<std::vector<int>> optimalPhaseVectors;
 
   private:
@@ -34,6 +36,7 @@ class Adaptive_beamtrainer{
     const std::vector<int> getRandomWeight(void);
     const std::vector<int> getRespond(struct average_corr_data recvData);
     const std::vector<int> getRespond(struct average_corr_data recvData, const std::vector<int> masterVector);
+    const std::vector<std::complex<float>> getChannelGain(void);
     const std::vector<int> cannotGetRespond(void);
     const std::vector<int> cannotGetRespond(const std::vector<int> masterVector);
 

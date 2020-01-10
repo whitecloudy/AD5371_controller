@@ -145,11 +145,10 @@ const std::vector<int> Adaptive_beamtrainer::getRespond(struct average_corr_data
 			//make inverse Matrix of random Weight Matrix
 			invMatrix = inv(trainingWeightMatrix);
 
-			arma::Col<std::complex<float>> channelGain = invMatrix * avgCorrColumn;
+			channelGain = invMatrix * avgCorrColumn;
 
 			//calculate optimal phase vector correspond to channel gain state
 			for(int i = 0; i<antNum; i++){
-        std::cout << channelGain(i) << " ";
 				optimalPhaseVector[i]= (360-complex2Phase(channelGain(i)));
 			}
       std::cout << std::endl;
@@ -172,6 +171,14 @@ const std::vector<int> Adaptive_beamtrainer::cannotGetRespond(void){
 		return getRandomWeight();
 	}else
 		return optimalPhaseVectors.back();
+}
+
+const std::vector<std::complex<float>> Adaptive_beamtrainer::getChannelGain(void){
+  std::vector<std::complex<float>> result;
+  for(int i = 0; i<antNum; i++){
+    result.push_back(channelGain(i));
+  }
+  return result;
 }
 
 

@@ -176,14 +176,16 @@ int Beamformer::run_beamformer(void){
         tag_id += data.RN16[i];
       }
 
-      if((data.successFlag == 1) && (tag_id ==  trainer[tag_turn].predefined_RN16)){   //if we get proper respond
-        if(!trainer[tag_turn].BWtrainer->isTraining()){
-          for(int i = 0; i<ant_amount; i++){
+      if((data.successFlag == 1) && (tag_id == trainer[tag_turn].predefined_RN16)){   //if we get proper respond
+        for(int i = 0; i<ant_amount; i++){
             log<<cur_weights[ant_nums[i]]<< ", ";
-          }
-          log<<data.avg_corr<<", "<<data.avg_i<<", "<<data.avg_q<<", "<<tag_id<<std::endl;
+        }
+        log<<data.avg_corr<<", "<<data.avg_i<<", "<<data.avg_q<<", "<<tag_id<<std::endl;
 
-          trainer[tag_turn].BWtrainer->startTraining();
+
+
+        if(!trainer[tag_turn].BWtrainer->isTraining()){
+                    trainer[tag_turn].BWtrainer->startTraining();
         }
 
         printf("Got RN16 : %x\n",tag_id);
@@ -195,16 +197,17 @@ int Beamformer::run_beamformer(void){
         trainer[tag_turn].avg_q_value += data.avg_q;
         trainer[tag_turn].avg_corr_value += data.avg_corr;
 
-      }else if((data.successFlag == 0)||(tag_id !=  trainer[tag_turn].predefined_RN16)){ //if we coundn't get proper respond
+      }else if((data.successFlag == 0)||(tag_id != trainer[tag_turn].predefined_RN16)){ //if we coundn't get proper respond
         printf("Couldn't get RN16\n\n");
-	std::cout << tag_id<<std::endl;
-
-        if(!trainer[tag_turn].BWtrainer->isTraining()){
+        std::cout << tag_id<<std::endl;
+        
+        if(data.successFlag == 1){
           for(int i = 0; i<ant_amount; i++){
             log<<cur_weights[ant_nums[i]]<< ", ";
           }
-          log<<0.0<<", "<<0.0<<", "<<0.0<<std::endl;
-
+          log<<data.avg_corr<<", "<<data.avg_i<<", "<<data.avg_q<<", "<<tag_id<<std::endl;
+        }
+        if(!trainer[tag_turn].BWtrainer->isTraining()){
           trainer[tag_turn].BWtrainer->startTraining();
         }
       }else{
