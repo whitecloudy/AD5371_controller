@@ -119,17 +119,15 @@ int Beamformer::run_beamformer(void){
   for(int i = 0; i<ant_amount; i++){
     log<<"phase "<<ant_nums[i]<<", ";
   }
-  log<<"avg corr,i,q,round"<<std::endl;
+  log<<"avg corr,i,q,RN16"<<std::endl;
+
+  int repeat = 1;
 
   while(1){
 
     if(ipc.data_recv(buffer) == -1){
       std::cerr <<"Breaker is activated"<<std::endl;
       break;   
-    }
-
-    for(int i = 0; i<ant_amount;i++){
-      log<<cur_weights[ant_nums[i]]<<", ";
     }
 
     memcpy(&data, buffer, sizeof(data));
@@ -147,28 +145,42 @@ int Beamformer::run_beamformer(void){
       printf("avg corr : %f\n",data.avg_corr);
       printf("avg iq : %f, %f\n\n",data.avg_i, data.avg_q);
 
-      log<<data.avg_corr<<", "<<data.avg_i<<", "<<data.avg_q<<","<<data.round<<std::endl;
+
+      for(int i = 0; i<ant_amount;i++){
+        log<<cur_weights[ant_nums[i]]<<", ";
+      }
 
 
-      if(tag_id == PREDFINED_RN16_){
+      log<<data.avg_corr<<", "<<data.avg_i<<", "<<data.avg_q<<","<<tag_id<<","<<data.round<<std::endl;
+
+      if(repeat < 5)
+        repeat++;
+      else{
+        //if(tag_id == PREDFINED_RN16_){
         weightVector = BWtrainer.getRespond(data);
         vector2cur_weights(weightVector);
         if(weights_apply(cur_weights)){
           std::cerr<<"weight apply failed"<<std::endl;
           return 1;
         }
+        repeat = 1;
+        //}
       }
-
     }else if(data.successFlag == 0){
       printf("Couldn't get RN16\n\n");
 
-      log<<0.0<<", "<<0.0<<", "<<0.0<<","<<data.round<<std::endl;
+      //log<<0.0<<", "<<0.0<<", "<<0.0<<","<<data.round<<std::endl;
 
-      weightVector = BWtrainer.cannotGetRespond();
-      vector2cur_weights(weightVector);
-      if(weights_apply(cur_weights)){
-        std::cerr<<"weight apply failed"<<std::endl;
-        return 1;
+      if(repeat<5)
+        repeat++;
+      else{
+        weightVector = BWtrainer.cannotGetRespond();
+        vector2cur_weights(weightVector);
+        if(weights_apply(cur_weights)){
+          std::cerr<<"weight apply failed"<<std::endl;
+          return 1;
+        }
+        repeat = 1;
       }
       /*****************************************************************/
     }
