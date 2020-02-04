@@ -6,7 +6,7 @@
 #include "csv/csv.h"
 
 #define ANT_num 16
-#define CAL_data_length 199
+#define CAL_data_length 397
 struct cal_ref{
   float phase;
   float power;
