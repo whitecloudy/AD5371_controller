@@ -166,7 +166,7 @@ int Beamformer::run_beamformer(void){
         repeat = 1;
         //}
       }
-    }else if(data.successFlag == 0){
+    }else{
       printf("Couldn't get RN16\n\n");
 
       //log<<0.0<<", "<<0.0<<", "<<0.0<<","<<data.round<<std::endl;
