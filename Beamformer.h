@@ -10,6 +10,10 @@
 #include <thread>
 #include <fstream>
 
+#define _SUCCESS 1
+#define _GATE_FAIL 2
+#define _PREAMBLE_FAIL 0
+
 struct average_corr_data{
   char successFlag;
   char RN16[16];
@@ -25,7 +29,6 @@ class Beamformer{
     Phase_Attenuator_controller * phase_ctrl;
     IPC_controller ipc;
     std::ofstream log;
-
 
     int ant_amount;
     int * ant_nums;

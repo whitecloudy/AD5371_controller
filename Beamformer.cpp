@@ -11,7 +11,9 @@
 
 #define PREDFINED_RN16_ 0xAAAA
 
-
+#define Kp 8
+#define BETA 0.05
+#define SAME_COUNT 3
 
 double normal_random(double mean, double std_dev){
   static std::random_device r;
@@ -135,7 +137,7 @@ int Beamformer::run_beamformer(void){
       log<<cur_weights[ant_nums[i]]<<", ";
     }
 
-    if(data.successFlag == 1){
+    if(data.successFlag == _SUCCESS){
 
       for(int i = 0; i<16; i++){
         tag_id = tag_id << 1;
@@ -150,7 +152,7 @@ int Beamformer::run_beamformer(void){
 
 
       if(tag_id == PREDFINED_RN16_){
-        log<<data.avg_corr<<", "<<data.avg_i<<", "<<data.avg_q<<std::endl;
+        log<<data.avg_corr<<", "<<data.avg_i<<", "<<data.avg_q<<", " <<data.round<<std::endl;
 
         weightVector = BWtrainer.getRespond(data);
         vector2cur_weights(weightVector);
@@ -159,11 +161,14 @@ int Beamformer::run_beamformer(void){
           return 1;
         }
       }else{
-        log<<0.0<<","<<0.0<<","<<0.0<<std::endl;
+        log<<0.0<<","<<0.0<<","<<0.0<< data.round<<std::endl;
       }
 
-    }else if(data.successFlag == 0){
-      log<<0.0<<","<<0.0<<","<<0.0<<std::endl;
+    }else{
+      if(data.successFlag == _PREAMBLE_FAIL)
+        log<<0.0<<","<<0.0<<","<<0.0<<data.round<<std::endl;
+      else if(data.successFlag == _GATE_FAIL)
+        printf("Gate Failed\n");
       printf("Couldn't get RN16\n\n");
 
       weightVector = BWtrainer.cannotGetRespond();
@@ -175,7 +180,6 @@ int Beamformer::run_beamformer(void){
 
       /*****************************************************************/
     }
-
     //send ack so that Gen2 program can recognize that the beamforming has been done
     if(ipc.send_ack() == -1){
       break;
@@ -193,6 +197,7 @@ int Beamformer::run_beamformer(void){
 
   //print wait
   weights_printing(cur_weights);
+
 
 
   return 0;
