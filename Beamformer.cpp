@@ -30,13 +30,14 @@ Beamformer::Beamformer(Phase_Attenuator_controller * controller_p, int ant_amoun
   this->ant_amount = ant_amount_p;
   this->ant_nums = new int[this->ant_amount];
 
+  memcpy(ant_nums, ant_num_p, sizeof(int)*(this->ant_amount));
+
   log.open("log.csv");
   for(int i = 0; i<ant_amount;i++){
     log<<"Phase "<< ant_nums[i] <<",";
   }
-  log<<"Avg amp,I,Q"<<std::endl;
+  log<<"Avg amp,I,Q,round"<<std::endl;
 
-  memcpy(ant_nums, ant_num_p, sizeof(int)*(this->ant_amount));
 }
 
 
@@ -161,12 +162,18 @@ int Beamformer::run_beamformer(void){
           return 1;
         }
       }else{
-        log<<0.0<<","<<0.0<<","<<0.0<< data.round<<std::endl;
+        log<<0.0<<","<<0.0<<","<<0.0<<", "<<data.round<<std::endl;
+        weightVector = BWtrainer.cannotGetRespond();
+        vector2cur_weights(weightVector);
+        if(weights_apply(cur_weights)){
+          std::cerr<<"weight apply failed"<<std::endl;
+          return 1;
+        }
       }
 
     }else{
       if(data.successFlag == _PREAMBLE_FAIL)
-        log<<0.0<<","<<0.0<<","<<0.0<<data.round<<std::endl;
+        log<<0.0<<","<<0.0<<","<<0.0<<", "<<"-"<<std::endl;
       else if(data.successFlag == _GATE_FAIL)
         printf("Gate Failed\n");
       printf("Couldn't get RN16\n\n");

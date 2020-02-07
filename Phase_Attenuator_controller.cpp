@@ -60,6 +60,7 @@ int Phase_Attenuator_controller::load_cal_data(void){
       V_preset[i][j].power = power;
       V_preset[i][j].ph_V = ph_V;
       V_preset[i][j].po_V = po_V;
+      j++;
     }
   }
 
