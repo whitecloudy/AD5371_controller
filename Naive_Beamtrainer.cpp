@@ -46,8 +46,8 @@ const std::vector<int> Naive_Beamtrainer::getRespond(struct average_corr_data re
 
 const std::vector<int> Naive_Beamtrainer::cannotGetRespond(void){
   if(isTraining){
+    avgCalCount++;
     if(avgCalCount < AvgMaxCount){
-      avgCalCount++;
       return currentPhaseVector;
     }else{
       avg_amp /= AvgMaxCount;
