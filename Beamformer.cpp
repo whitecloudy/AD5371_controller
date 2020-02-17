@@ -11,9 +11,6 @@
 
 #define PREDFINED_RN16_ 0xAAAA
 
-#define Kp 8
-#define BETA 0.05
-#define SAME_COUNT 3
 
 double normal_random(double mean, double std_dev){
   static std::random_device r;
