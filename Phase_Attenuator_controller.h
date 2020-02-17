@@ -4,11 +4,12 @@
 #include <iostream>
 #include "Vout_controller.h"
 #include "csv/csv.h"
+#include <complex>
+#include <vector>
 
 #define ANT_num 16
-#define CAL_data_length 397
 struct cal_ref{
-  float phase;
+  std::complex<float> phase;
   float power;
   float ph_V;
   float po_V;
@@ -18,7 +19,7 @@ struct cal_ref{
 class Phase_Attenuator_controller{
   private:
     //Voltage control reference data
-    struct cal_ref V_preset[ANT_num][CAL_data_length];
+    std::vector<struct cal_ref> V_preset[ANT_num];
     int index_V_preset[ANT_num][360];
 
     Vout_controller V;
