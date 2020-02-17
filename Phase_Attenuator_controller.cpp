@@ -37,10 +37,14 @@
 #define ANT15_attenuator 33
 #define ANT16_attenuator 32
 
+#define PI (3.1415926535897)
 
+#define Deg2Rad(_num) (float)(_num * (PI / 180))
 
 const char PHASE[] = {ANT1_phase, ANT2_phase, ANT3_phase, ANT4_phase, ANT5_phase, ANT6_phase, ANT7_phase, ANT8_phase, ANT9_phase, ANT10_phase, ANT11_phase, ANT12_phase, ANT13_phase, ANT14_phase, ANT15_phase, ANT16_phase};
 const char ATTENUATOR[] = {ANT1_attenuator, ANT2_attenuator, ANT3_attenuator, ANT4_attenuator, ANT5_attenuator, ANT6_attenuator, ANT7_attenuator, ANT8_attenuator, ANT9_attenuator, ANT10_attenuator, ANT11_attenuator, ANT12_attenuator, ANT13_attenuator, ANT14_attenuator, ANT15_attenuator, ANT16_attenuator};
+
+
 
 
 //#define __DEBUG__
@@ -53,14 +57,14 @@ int Phase_Attenuator_controller::load_cal_data(void){
 
 
     float ph_V, po_V, phase, power;
-    int j = 0;
     while(csv_reader.read_row(phase, power, ph_V, po_V)){
-
-      V_preset[i][j].phase = phase;
-      V_preset[i][j].power = power;
-      V_preset[i][j].ph_V = ph_V;
-      V_preset[i][j].po_V = po_V;
-      j++;
+      struct cal_ref v_data;
+      v_data.phase = std::polar(1.0f, Deg2Rad(phase));
+      v_data.power = power;
+      v_data.ph_V = ph_V;
+      v_data.po_V = po_V;
+      
+      V_preset[i].push_back(v_data);
     }
   }
 
@@ -69,58 +73,31 @@ int Phase_Attenuator_controller::load_cal_data(void){
  
 }
 
-int preset_finder(struct cal_ref * V_preset, int start, int end, float phase){
-  int middle = (start + end)/2;
 
-#ifdef __DEBUG__
-  std::cout<<start<<", "<<middle<<", "<<end<< " || "<<phase<< " || "<<V_preset[middle].phase<<std::endl;
-#endif
-  float minus, center, plus;
-  int minus_index, center_index, plus_index;
+int preset_finder(std::vector<struct cal_ref> V_preset, float phase){
+  int vec_len = V_preset.size();  
+  std::complex<float> phase_com = std::polar(1.0f, Deg2Rad(phase));
 
-  if(middle==0){
-    minus_index = CAL_data_length-1;
-    center_index = 0;
-    plus_index = 1;
-    minus = V_preset[minus_index].phase -360;
-    center = V_preset[center_index].phase;
-    plus = V_preset[plus_index].phase;
-  }else if(middle==CAL_data_length-1){
-    minus_index = CAL_data_length-2;
-    center_index = CAL_data_length -1;
-    plus_index = 0;
-    minus = V_preset[minus_index].phase;
-    center = V_preset[center_index].phase;
-    plus = V_preset[plus_index].phase + 360;
-  }else{
-    minus_index = middle-1;
-    center_index = middle;
-    plus_index = middle+1;
-    minus = V_preset[minus_index].phase;
-    center = V_preset[center_index].phase;
-    plus = V_preset[plus_index].phase;
+  int min_idx = 0;
+  double min_value = 999999.9;
+
+  for(int i = 0; i< vec_len; i++){
+    if(std::abs(V_preset[i].phase - phase_com) < min_value){
+      min_idx = i;
+      min_value = std::abs(V_preset[i].phase - phase_com);
+    }
   }
 
-  if((center < phase) && (plus >= phase)){
-    if((phase - center) > (plus - phase))
-      return plus_index;
-    else
-      return center_index;
-  }else if((center >= phase) && (minus < phase)){
-    if((phase - minus) > (center - phase))
-      return center_index;
-    else
-      return minus_index;
-  }
-
-  if(V_preset[middle].phase > phase)
-    return preset_finder(V_preset, start, middle, phase);
-  else
-    return preset_finder(V_preset, middle+1, end, phase);
+  return min_idx;
 }
 
+int preset_finder(std::vector<struct cal_ref> V_preset, int start, int end, float phase){
+  return preset_finder(V_preset, phase);
+}
+
+
 int Phase_Attenuator_controller::find_matched_preset(int ant, float phase){
-  return preset_finder(V_preset[ant], 0, CAL_data_length-1, phase);
+  return preset_finder(V_preset[ant], phase);
 }
 
 int Phase_Attenuator_controller::set_integer_index(void){
