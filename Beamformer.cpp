@@ -92,6 +92,12 @@ int Beamformer::run_beamformer(void){
 
   int round = 0;
 
+  //We must measure SIC port before we start.
+  for(int i = 0; i<ant_amount-1; i++){
+    phase_ctrl->ant_off(ant_nums[i]);
+  }
+  phase_ctrl->phase_control(ant_nums[ant_amount-1], -3.0, 0);
+
   while(1){
     if(ipc.data_recv(buffer) == -1){
       std::cerr <<"Breaker is activated"<<std::endl;

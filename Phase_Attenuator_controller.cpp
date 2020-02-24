@@ -3,39 +3,42 @@
 #include <cmath>
 
 
-#define ANT1_phase 23
-#define ANT2_phase 22
-#define ANT3_phase 21
-#define ANT4_phase 20
-#define ANT5_phase 19
-#define ANT6_phase 18
-#define ANT7_phase 17
-#define ANT8_phase 16
-#define ANT9_phase 7
-#define ANT10_phase 6
-#define ANT11_phase 5
-#define ANT12_phase 4
-#define ANT13_phase 3
-#define ANT14_phase 2
-#define ANT15_phase 1
-#define ANT16_phase 0
+enum VOUTNUM
+{
+  ANT1_phase = 23,
+  ANT2_phase = 22,
+  ANT3_phase = 21,
+  ANT4_phase = 20,
+  ANT5_phase = 19,
+  ANT6_phase = 18,
+  ANT7_phase = 17,
+  ANT8_phase = 16,
+  ANT9_phase = 7,
+  ANT10_phase = 6,
+  ANT11_phase = 5,
+  ANT12_phase = 4,
+  ANT13_phase = 3,
+  ANT14_phase = 2,
+  ANT15_phase = 1,
+  ANT16_phase = 0,
+  ANT1_attenuator = 31,
+  ANT2_attenuator = 30,
+  ANT3_attenuator = 29,
+  ANT4_attenuator = 28,
+  ANT5_attenuator = 27,
+  ANT6_attenuator = 26,
+  ANT7_attenuator = 25,
+  ANT8_attenuator = 24,
+  ANT9_attenuator = 39,
+  ANT10_attenuator = 38,
+  ANT11_attenuator = 37,
+  ANT12_attenuator = 36,
+  ANT13_attenuator = 35,
+  ANT14_attenuator = 34,
+  ANT15_attenuator = 33,
+  ANT16_attenuator = 32
+};
 
-#define ANT1_attenuator 31
-#define ANT2_attenuator 30
-#define ANT3_attenuator 29
-#define ANT4_attenuator 28
-#define ANT5_attenuator 27
-#define ANT6_attenuator 26
-#define ANT7_attenuator 25
-#define ANT8_attenuator 24
-#define ANT9_attenuator 39
-#define ANT10_attenuator 38
-#define ANT11_attenuator 37
-#define ANT12_attenuator 36
-#define ANT13_attenuator 35
-#define ANT14_attenuator 34
-#define ANT15_attenuator 33
-#define ANT16_attenuator 32
 
 #define PI (3.1415926535897)
 
@@ -43,6 +46,7 @@
 
 const char PHASE[] = {ANT1_phase, ANT2_phase, ANT3_phase, ANT4_phase, ANT5_phase, ANT6_phase, ANT7_phase, ANT8_phase, ANT9_phase, ANT10_phase, ANT11_phase, ANT12_phase, ANT13_phase, ANT14_phase, ANT15_phase, ANT16_phase};
 const char ATTENUATOR[] = {ANT1_attenuator, ANT2_attenuator, ANT3_attenuator, ANT4_attenuator, ANT5_attenuator, ANT6_attenuator, ANT7_attenuator, ANT8_attenuator, ANT9_attenuator, ANT10_attenuator, ANT11_attenuator, ANT12_attenuator, ANT13_attenuator, ANT14_attenuator, ANT15_attenuator, ANT16_attenuator};
+const std::string POWER_PRESET[] = {"-9.0", "-8.5", "-8.0", "-7.5", "-7.0", "-6.5", "-6.0", "-5.5", "-5.0", "-4.5", "-4.0", "-3.5", "-3.0"};
 
 
 
@@ -51,26 +55,31 @@ const char ATTENUATOR[] = {ANT1_attenuator, ANT2_attenuator, ANT3_attenuator, AN
 
 int Phase_Attenuator_controller::load_cal_data(void){
   //loading the calibration data
-  for(int i = 0; i<16; i++){
-    std::string filename = "calibration_data/ant" + std::to_string(i) + "_cal_data";
-    io::CSVReader<4> csv_reader(filename);
+  
+  std::cout << "Reading calibration data.....";
+  for(int power_idx = 0;  power_idx < POWER_num; power_idx++){
+    for(int i = 0; i<ANT_num; i++){
+      std::string filename = "calibration_data/ant" + std::to_string(i) +
+        "_" + POWER_PRESET[power_idx] + "dB" + 
+        "_cal_data";
+      io::CSVReader<4> csv_reader(filename);
 
 
-    float ph_V, po_V, phase, power;
-    while(csv_reader.read_row(phase, power, ph_V, po_V)){
-      struct cal_ref v_data;
-      v_data.phase = std::polar(1.0f, Deg2Rad(phase));
-      v_data.power = power;
-      v_data.ph_V = ph_V;
-      v_data.po_V = po_V;
-      
-      V_preset[i].push_back(v_data);
+      float ph_V, po_V, phase, power;
+      while(csv_reader.read_row(phase, power, ph_V, po_V)){
+        struct cal_ref v_data;
+        v_data.phase = std::polar(1.0f, Deg2Rad(phase));
+        v_data.power = power;
+        v_data.ph_V = ph_V;
+        v_data.po_V = po_V;
+
+        V_preset[i][power_idx].push_back(v_data);
+      }
     }
   }
+  std::cout << "Done"<<std::endl;
 
   return 0;
- 
- 
 }
 
 
@@ -96,53 +105,66 @@ int preset_finder(std::vector<struct cal_ref> V_preset, int start, int end, floa
 }
 
 
-int Phase_Attenuator_controller::find_matched_preset(int ant, float phase){
-  return preset_finder(V_preset[ant], phase);
+int Phase_Attenuator_controller::find_matched_preset(int ant, int power, float phase){
+  return preset_finder(V_preset[ant][power], phase);
 }
+
 
 int Phase_Attenuator_controller::set_integer_index(void){
-  for(int ant = 0; ant < ANT_num; ant++){
-    for(int i = 0; i < 360; i++){
-      index_V_preset[ant][i] = find_matched_preset(ant, i);
+  std::cerr << "Preparing integer indexes...";
+  for(int power_idx = 0; power_idx < POWER_num; power_idx++){
+    for(int ant = 0; ant < ANT_num; ant++){
+      for(int i = 0; i < 360; i++){
+        index_V_preset[ant][power_idx][i] = find_matched_preset(ant, power_idx ,i);
+      }
     }
   }
+  std::cout << "Done"<<std::endl;
 }
 
-int Phase_Attenuator_controller::voltage_index_search(int ant, int phase){
+
+int Phase_Attenuator_controller::voltage_index_search(int ant, int power_idx, int phase){
   while(phase < 0)
     phase += 360;
 
-  return index_V_preset[ant][phase%360];
+  return index_V_preset[ant][power_idx][phase%360];
 }
 
-int Phase_Attenuator_controller::voltage_index_search(int ant, float phase){
+int Phase_Attenuator_controller::voltage_index_search(int ant, int power_idx ,float phase){
   while(phase > 360)
     phase -= 360.0;
   while(phase < 0)
     phase += 360.0;
 
-  return find_matched_preset(ant, phase);
+  return find_matched_preset(ant, power_idx, phase);
 }
 
-int Phase_Attenuator_controller::phase_setup(int ant, int index){
-  int at_result = V.voltage_modify(ATTENUATOR[ant], V_preset[ant][index].po_V);
-  int ph_result = V.voltage_modify(PHASE[ant], V_preset[ant][index].ph_V);
+int Phase_Attenuator_controller::phase_setup(int ant, int power_idx, int index){
+  ant_power_setting[ant] = power_idx;
+  int at_result = V.voltage_modify(ATTENUATOR[ant], V_preset[ant][power_idx][index].po_V);
+  int ph_result = V.voltage_modify(PHASE[ant], V_preset[ant][power_idx][index].ph_V);
 
   return at_result&&ph_result;
 }
 
-int Phase_Attenuator_controller::phase_control(int ant, int phase){
-  int index = voltage_index_search(ant, phase);
+int Phase_Attenuator_controller::phase_control(int ant, float power, int phase){
+  ant_power_setting[ant] = dB2idx(power);
+  return phase_control(ant, phase);
+}
 
-  //fprintf(stderr,"index : %d\n\n",index);
-  //fprintf(stderr,"att voltage = %f\n\n",V_preset[ant][100].po_V);
-  //fprintf(stderr,"pha voltage = %f\n\n",V_preset[ant][100].ph_V);
-  return phase_setup(ant, index);
+int Phase_Attenuator_controller::phase_control(int ant, float power, float phase){
+  ant_power_setting[ant] = dB2idx(power);
+  return phase_control(ant, phase);
+}
+
+int Phase_Attenuator_controller::phase_control(int ant, int phase){
+  int index = voltage_index_search(ant, ant_power_setting[ant], phase);
+  return phase_setup(ant, ant_power_setting[ant], index);
 }
 
 int Phase_Attenuator_controller::phase_control(int ant, float phase){
-  int index = voltage_index_search(ant, phase);
-  return phase_setup(ant, index);
+  int index = voltage_index_search(ant, ant_power_setting[ant], phase);
+  return phase_setup(ant, ant_power_setting[ant], index);
 }
 
 int Phase_Attenuator_controller::data_apply(void){
@@ -155,15 +177,11 @@ int Phase_Attenuator_controller::ant_off(int ant_num){
 
 
 Phase_Attenuator_controller::Phase_Attenuator_controller(void){
-  if(load_cal_data())
-    std::cout<<"Error : Loading calibration data failed"<<std::endl;
-  set_integer_index();
+  init();
 }
 
 Phase_Attenuator_controller::Phase_Attenuator_controller(int phase){
-  if(load_cal_data())
-    std::cout<<"Error : Loading calibration data failed"<<std::endl;
-  set_integer_index();
+  init();
 
   int result = 0;
   for(int i = 0; i<ANT_num; i++){
@@ -176,9 +194,7 @@ Phase_Attenuator_controller::Phase_Attenuator_controller(int phase){
 }
 
 Phase_Attenuator_controller::Phase_Attenuator_controller(float phase){
-  if(load_cal_data())
-    std::cout<<"Error : Loading calibration data failed"<<std::endl;
-  set_integer_index();
+  init();
 
   int result = 0;
   for(int i = 0; i<ANT_num; i++){
@@ -188,4 +204,14 @@ Phase_Attenuator_controller::Phase_Attenuator_controller(float phase){
 
   if(result)
     std::cout<<"Error : Phase initalize error"<<std::endl;
+}
+
+int Phase_Attenuator_controller::init(void){
+  if(load_cal_data())
+    std::cout<<"Error : Loading calibration data failed"<<std::endl;
+  set_integer_index();
+
+  std::fill_n(ant_power_setting, ANT_num, DEFAULT_POWER_idx);
+
+  return 0;
 }
