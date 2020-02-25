@@ -6,7 +6,7 @@ TARGET1 = beamforming
 TARGET2 = voltage_control
 TARGET3 = board_calibration
 LINK = -lpthread -pthread
-OBJECTS = SPI_communicator.o Vout_controller.o Phase_Attenuator_controller.o Beamformer.o IPC_controller.o
+OBJECTS = SPI_communicator.o Vout_controller.o Phase_Attenuator_controller.o Beamformer.o IPC_controller.o SIC_controller.o
 
 all : $(TARGET) 
 

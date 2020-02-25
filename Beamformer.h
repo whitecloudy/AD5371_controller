@@ -3,6 +3,7 @@
 
 #include "Controller_Global.h"
 #include "Phase_Attenuator_controller.h"
+#include "SIC_controller.hpp"
 #include "IPC_controller.h"
 #include <iostream>
 #include <string>
@@ -29,6 +30,7 @@ class Beamformer{
   private:
     Phase_Attenuator_controller * phase_ctrl;
     IPC_controller ipc;
+    SIC_controller * sic_ctrl;
 
     int ant_amount;
     int * ant_nums;
