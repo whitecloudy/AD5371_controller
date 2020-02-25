@@ -119,8 +119,16 @@ int Beamformer::run_beamformer(void){
   Naive_Beamtrainer BWtrainer(ant_amount);
 
   std::vector<int> weightVector = BWtrainer.startTraining();
+
+  //We must measure SIC port before we start.
+  for(int i = 0; i<ant_amount-1; i++){
+    phase_ctrl->ant_off(ant_nums[i]);
+  }
+  phase_ctrl->phase_control(ant_nums[ant_amount-1], -3.0, 0);
+
   vector2cur_weights(weightVector);
   weights_apply(cur_weights);
+
 
   while(1){
 
