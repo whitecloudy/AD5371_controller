@@ -3,6 +3,8 @@
 
 #include "Controller_Global.h"
 #include "Phase_Attenuator_controller.h"
+#include "Adaptive_Beamtrainer.h"
+#include "SIC_controller.hpp"
 #include "IPC_controller.h"
 #include <iostream>
 #include <string>
@@ -11,6 +13,10 @@
 #include <fstream>
 
 
+#define _SUCCESS 1
+#define _GATE_FAIL 2
+#define _PREAMBLE_FAIL 0
+
 struct average_corr_data{
   char successFlag;
   char RN16[16];
@@ -18,7 +24,11 @@ struct average_corr_data{
   float avg_i;
   float avg_q;
   unsigned int round;
+  float cw_i;
+  float cw_q;
 };
+
+class Adaptive_beamtrainer;
 
 
 class Beamformer{
@@ -26,6 +36,8 @@ class Beamformer{
     Phase_Attenuator_controller * phase_ctrl;
     IPC_controller ipc;
     std::ofstream log;
+    SIC_controller * sic_ctrl;
+    Adaptive_beamtrainer * BWtrainer;
 
     int ant_amount;
     int * ant_nums;
@@ -45,6 +57,11 @@ class Beamformer{
     int init_beamformer(void);
     int run_beamformer(void);
     int calculate_beamforming_weights(void);
+
+    int SIC_port_measure(void);
+    int SIC_handler(struct average_corr_data &);
+    int Signal_handler(struct average_corr_data &);
+    int dataLogging(struct average_corr_data &);
 
   public:
     Beamformer(Phase_Attenuator_controller * controller, int ant_amount, int * ant_num);
