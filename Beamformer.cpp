@@ -22,77 +22,60 @@ double normal_random(double mean, double std_dev){
 int Beamformer::run_beamformer(void){
 
   char buffer[IO_BUF_SIZE] = {};
-
-  uint16_t tag_id = 0;
-
   struct average_corr_data data;
 
+  /******************** SIC measure stage *************/
 
-  //We must measure SIC port before we start.
-  for(int i = 0; i<ant_amount-1; i++){
-    phase_ctrl->ant_off(ant_nums[i]);
-  }
-  phase_ctrl->phase_control(ant_nums[ant_amount-1], SIC_REF_POWER, 0);
-  phase_ctrl->data_apply();
-  std::cout << "SIC Phase Set"<<std::endl;
+  SIC_port_measure();
   
   if(ipc.data_recv(buffer) == -1){
     std::cerr <<"Breaker is activated"<<std::endl;
+    return 0;
   } 
   memcpy(&data, buffer, sizeof(data));
 
   sic_ctrl = new SIC_controller(std::complex<float>(data.cw_i, data.cw_q));
 
+  /*****************************************************/
+
   //initial phase here
   
-  if(ipc.send_ack() == -1);
+  if(ipc.send_ack() == -1)
+    return 0;
 
+  //loop until it is over
   while(1){
+    /******************* SIC stage *******************/
     if(ipc.data_recv(buffer) == -1){
       std::cerr <<"Breaker is activated"<<std::endl;
       break;   
     } 
-    
-    sic_ctrl->setCurrentAmp(std::complex<float>(data.cw_i, data.cw_q));
-    cur_weights[ant_nums[ant_amount-1]] = sic_ctrl->getPhase();
-    phase_ctrl->phase_control(ant_nums[ant_amount-1], sic_ctrl->getPower(), cur_weights[ant_nums[ant_amount-1]]);
-    phase_ctrl->data_apply();
-
-    //send ack so that Gen2 program can recognize that the beamforming has been done
-    if(ipc.send_ack() == -1){
-      break;
-    }
-    if(ipc.data_recv(buffer) == -1){
-      std::cerr <<"Breaker is activated"<<std::endl;
-      break;   
-    } 
-
-
-
     memcpy(&data, buffer, sizeof(data));
 
-    for(int i = 0; i<16; i++){
-      tag_id = tag_id << 1;
-      tag_id += data.RN16[i];
-    }
-
-    /*************************Add algorithm here***************************/
-
-
-    printf("tag id : %x\n",tag_id);
-    printf("avg : %f\n",data.avg_corr);
-    printf("iq avg : %f %f\n",data.avg_i,data.avg_q);
-    printf("\n");
-
-
-
-    /*****************************************************************/
-
+    SIC_handler(data);    
 
     //send ack so that Gen2 program can recognize that the beamforming has been done
     if(ipc.send_ack() == -1){
       break;
     }
+    /*************************************************/
+
+
+
+    /******************* Signal stage *****************/
+    if(ipc.data_recv(buffer) == -1){
+      std::cerr <<"Breaker is activated"<<std::endl;
+      break;   
+    } 
+    memcpy(&data, buffer, sizeof(data));
+
+    Signal_handler(data);
+
+    //send ack so that Gen2 program can recognize that the beamforming has been done
+    if(ipc.send_ack() == -1){
+      break;
+    }
+    /******************************************************/
   }//end of while(1)
 
   //print wait
@@ -180,4 +163,52 @@ int Beamformer::start_beamformer(void){
     return -1;
 
   return run_beamformer();
+}
+
+
+int Beamformer::SIC_port_measure(void){
+  //We must measure SIC port before we start.
+  for(int i = 0; i<ant_amount-1; i++){
+    phase_ctrl->ant_off(ant_nums[i]);
+  }
+  cur_weights[ant_nums[ant_amount-1]] = 0;
+  phase_ctrl->phase_control(ant_nums[ant_amount-1], SIC_REF_POWER, 0);
+  phase_ctrl->data_apply();
+  std::cout << "SIC Phase Set"<<std::endl;
+
+  return 0;
+}
+
+
+int Beamformer::SIC_handler(struct average_corr_data data){
+  sic_ctrl->setCurrentAmp(std::complex<float>(data.cw_i, data.cw_q));
+  cur_weights[ant_nums[ant_amount-1]] = sic_ctrl->getPhase();   //get SIC phase
+  phase_ctrl->phase_control(ant_nums[ant_amount-1], sic_ctrl->getPower(), cur_weights[ant_nums[ant_amount-1]]); //change phase and power
+  phase_ctrl->data_apply();
+
+  return 0;
+}
+
+
+int Beamformer::Signal_handler(struct average_corr_data data){
+  uint16_t tag_id = 0;
+
+  for(int i = 0; i<16; i++){
+    tag_id = tag_id << 1;
+    tag_id += data.RN16[i];
+  }
+
+  /*************************Add algorithm here***************************/
+
+
+  printf("tag id : %x\n",tag_id);
+  printf("avg : %f\n",data.avg_corr);
+  printf("iq avg : %f %f\n",data.avg_i,data.avg_q);
+  printf("\n");
+
+
+
+  /*****************************************************************/
+
+  return 0;
 }

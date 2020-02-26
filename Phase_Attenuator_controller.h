@@ -8,9 +8,9 @@
 #include <vector>
 
 #define ANT_num   (16)
-#define POWER_num (13)
+#define POWER_num (21)
 #define DEFAULT_POWER (-6.0)
-#define dB2idx(_dB)  (unsigned int)(((_dB) + 9.0)/0.5)
+#define dB2idx(_dB)  (unsigned int)(((_dB) + 13.0)/0.5)
 #define DEFAULT_POWER_idx (dB2idx(DEFAULT_POWER))
 
 

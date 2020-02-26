@@ -8,7 +8,7 @@
 
 #define dB2Amp(_X) pow(10.0f, _X/20.0f)
 #define Amp2dB(_X) 20.0f*log10(_X)
-#define _MINdB  (-9.0)
+#define _MINdB  (-13.0)
 #define _MAXdB  (-3.0)
 
 SIC_controller::SIC_controller(std::complex<float> input_ref){

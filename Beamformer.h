@@ -47,6 +47,10 @@ class Beamformer{
     int run_beamformer(void);
     int calculate_beamforming_weights(void);
 
+    int SIC_port_measure(void);
+    int SIC_handler(struct average_corr_data);
+    int Signal_handler(struct average_corr_data);
+
   public:
     Beamformer(Phase_Attenuator_controller * controller, int ant_amount, int * ant_num);
     ~Beamformer();
