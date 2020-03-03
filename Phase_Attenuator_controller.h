@@ -11,6 +11,7 @@
 #define POWER_num (21)
 #define DEFAULT_POWER (-6.0)
 #define dB2idx(_dB)  (unsigned int)(((_dB) + 13.0)/0.5)
+#define PoffIDX    (-1)
 #define DEFAULT_POWER_idx (dB2idx(DEFAULT_POWER))
 
 
@@ -49,6 +50,7 @@ class Phase_Attenuator_controller{
     int phase_control(int, float, float);
 
     int ant_off(int);
+    int ant_on(int, float);
     int data_apply();
     void print_integer_index(void);
 };

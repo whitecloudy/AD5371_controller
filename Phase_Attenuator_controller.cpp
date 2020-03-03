@@ -158,11 +158,15 @@ int Phase_Attenuator_controller::phase_control(int ant, float power, float phase
 }
 
 int Phase_Attenuator_controller::phase_control(int ant, int phase){
+  if(ant_power_setting[ant]==PoffIDX) //If this ant is offed, we do nothing
+    return 0;
   int index = voltage_index_search(ant, ant_power_setting[ant], phase);
   return phase_setup(ant, ant_power_setting[ant], index);
 }
 
 int Phase_Attenuator_controller::phase_control(int ant, float phase){
+  if(ant_power_setting[ant]==PoffIDX) //If this ant is offed, we do nothing
+    return 0;
   int index = voltage_index_search(ant, ant_power_setting[ant], phase);
   return phase_setup(ant, ant_power_setting[ant], index);
 }
@@ -172,8 +176,14 @@ int Phase_Attenuator_controller::data_apply(void){
 }
 
 int Phase_Attenuator_controller::ant_off(int ant_num){
+  ant_power_setting[ant_num] = PoffIDX;
   return V.voltage_modify(ATTENUATOR[ant_num], 0);
 }
+
+int Phase_Attenuator_controller::ant_on(int ant_num, float power){
+  return phase_control(ant_num, power, 0);
+}
+
 
 
 Phase_Attenuator_controller::Phase_Attenuator_controller(void){

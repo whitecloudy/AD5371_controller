@@ -35,6 +35,8 @@ int Beamformer::run_beamformer(void){
   memcpy(&data, buffer, sizeof(data));
 
   sic_ctrl = new SIC_controller(std::complex<float>(data.cw_i, data.cw_q));
+  SIC_port_measure_over();
+
 
   /*****************************************************/
 
@@ -168,8 +170,8 @@ int Beamformer::start_beamformer(void){
 
 int Beamformer::SIC_port_measure(void){
   //We must measure SIC port before we start.
-  for(int i = 0; i<ant_amount-1; i++){
-    phase_ctrl->ant_off(ant_nums[i]);
+  for(int i = 0; i<16; i++){
+    phase_ctrl->ant_off(i);
   }
   cur_weights[ant_nums[ant_amount-1]] = 0;
   phase_ctrl->phase_control(ant_nums[ant_amount-1], SIC_REF_POWER, 0);
@@ -179,6 +181,19 @@ int Beamformer::SIC_port_measure(void){
   return 0;
 }
 
+
+int Beamformer::SIC_port_measure_over(void){
+  //We must measure SIC port before we start.
+  for(int i = 0; i<ant_amount-1; i++){
+    phase_ctrl->ant_on(ant_nums[i], DEFAULT_POWER);
+    cur_weights[ant_nums[i]] = 0;
+  }
+  phase_ctrl->ant_off(ant_nums[ant_amount-1]);
+  phase_ctrl->data_apply();
+  std::cout << "SIC over"<<std::endl;
+
+  return 0;
+}
 
 int Beamformer::SIC_handler(struct average_corr_data data){
   sic_ctrl->setCurrentAmp(std::complex<float>(data.cw_i, data.cw_q));
@@ -209,6 +224,7 @@ int Beamformer::Signal_handler(struct average_corr_data data){
 
 
   /*****************************************************************/
-
+  phase_ctrl->ant_off(ant_nums[ant_amount-1]);
+  
   return 0;
 }
