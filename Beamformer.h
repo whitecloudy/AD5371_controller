@@ -59,6 +59,7 @@ class Beamformer{
     int calculate_beamforming_weights(void);
 
     int SIC_port_measure(void);
+    int SIC_port_measure_over(void);
     int SIC_handler(struct average_corr_data &);
     int Signal_handler(struct average_corr_data &);
     int dataLogging(struct average_corr_data &);
