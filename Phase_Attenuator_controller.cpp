@@ -148,25 +148,37 @@ int Phase_Attenuator_controller::phase_setup(int ant, int power_idx, int index){
 }
 
 int Phase_Attenuator_controller::phase_control(int ant, float power, int phase){
+  if(ant_power_setting[ant]==PoffIDX) { //If this ant is offed, we do nothing
+    std::cout<<"It's offed!"<<std::endl;
+    return 0;
+  }
   ant_power_setting[ant] = dB2idx(power);
   return phase_control(ant, phase);
 }
 
 int Phase_Attenuator_controller::phase_control(int ant, float power, float phase){
+  if(ant_power_setting[ant]==PoffIDX) { //If this ant is offed, we do nothing
+    std::cout<<"It's offed!"<<std::endl;
+    return 0;
+  }
   ant_power_setting[ant] = dB2idx(power);
   return phase_control(ant, phase);
 }
 
 int Phase_Attenuator_controller::phase_control(int ant, int phase){
-  if(ant_power_setting[ant]==PoffIDX) //If this ant is offed, we do nothing
+  if(ant_power_setting[ant]==PoffIDX) { //If this ant is offed, we do nothing
+    std::cout<<"It's offed!"<<std::endl;
     return 0;
+  }
   int index = voltage_index_search(ant, ant_power_setting[ant], phase);
   return phase_setup(ant, ant_power_setting[ant], index);
 }
 
 int Phase_Attenuator_controller::phase_control(int ant, float phase){
-  if(ant_power_setting[ant]==PoffIDX) //If this ant is offed, we do nothing
+  if(ant_power_setting[ant]==PoffIDX) { //If this ant is offed, we do nothing
+    std::cout<<"It's offed!"<<std::endl;
     return 0;
+  }  
   int index = voltage_index_search(ant, ant_power_setting[ant], phase);
   return phase_setup(ant, ant_power_setting[ant], index);
 }
@@ -181,6 +193,7 @@ int Phase_Attenuator_controller::ant_off(int ant_num){
 }
 
 int Phase_Attenuator_controller::ant_on(int ant_num, float power){
+  ant_power_setting[ant_num] = dB2idx(power);
   return phase_control(ant_num, power, 0);
 }
 
@@ -222,6 +235,7 @@ int Phase_Attenuator_controller::init(void){
   set_integer_index();
 
   std::fill_n(ant_power_setting, ANT_num, DEFAULT_POWER_idx);
+  std::cout << ant_power_setting[0]<<std::endl;
 
   return 0;
 }

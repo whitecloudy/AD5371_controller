@@ -50,7 +50,7 @@ class Phase_Attenuator_controller{
     int phase_control(int, float, float);
 
     int ant_off(int);
-    int ant_on(int, float);
+    int ant_on(int, float power = DEFAULT_POWER);
     int data_apply();
     void print_integer_index(void);
 };
