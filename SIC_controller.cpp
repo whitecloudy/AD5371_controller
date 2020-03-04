@@ -19,7 +19,7 @@ SIC_controller::SIC_controller(std::complex<float> input_ref){
 }
 
 int SIC_controller::setCurrentAmp(std::complex<float> amp_Rx){
-  std::complex<float> amp_Ant = amp_Rx;
+  std::complex<float> amp_Ant = amp_Rx - SIC_cha * weight_cur;
   std::complex<float> weight_new = -amp_Ant/SIC_cha;
 
   
