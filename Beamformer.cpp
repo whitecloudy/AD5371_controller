@@ -9,6 +9,8 @@
 
 #define PREDFINED_RN16_ 0xAAAA
 
+#define SIC_PORT_NUM_ ant_nums[ant_amount-1]
+
 double normal_random(double mean, double std_dev){
   static std::random_device r;
   static std::default_random_engine generator(r());
@@ -115,6 +117,10 @@ int Beamformer::init_beamformer(void){
 
   std::vector<int> weightVector = BWtrainer->startTraining();
   vector2cur_weights(weightVector);
+  for(int i = 0; i<ant_amount; i++){
+    phase_ctrl->ant_on(ant_nums[i]);
+  }
+  std::cout<<"Init"<<std::endl;
   return weights_apply(cur_weights);
 }
 
@@ -177,12 +183,11 @@ void Beamformer::weights_printing(int * weights){
 
 
 int Beamformer::start_beamformer(void){
-  init_beamformer();
-
+  if(init_beamformer())
+    std::cerr << "Beamformer init failed"<<std::endl;
+  std::cout << "Beamformer init finished"<<std::endl;
   if(ipc.wait_sync())
     return -1;
-
-
 
   return run_beamformer();
 }
@@ -193,8 +198,9 @@ int Beamformer::SIC_port_measure(void){
   for(int i = 0; i<16; i++){
     phase_ctrl->ant_off(i);
   }
-  cur_weights[ant_nums[ant_amount-1]] = 0;
-  phase_ctrl->phase_control(ant_nums[ant_amount-1], SIC_REF_POWER, 0);
+  phase_ctrl->ant_on(SIC_PORT_NUM_);
+  cur_weights[SIC_PORT_NUM_] = 0;
+  phase_ctrl->phase_control(SIC_PORT_NUM_, SIC_REF_POWER, 0);
   phase_ctrl->data_apply();
   std::cout << "SIC Phase Set"<<std::endl;
 
@@ -206,10 +212,11 @@ int Beamformer::SIC_port_measure(void){
 int Beamformer::SIC_port_measure_over(void){
   //We must measure SIC port before we start.
   for(int i = 0; i<ant_amount-1; i++){
-    phase_ctrl->ant_on(ant_nums[i], DEFAULT_POWER);
+    phase_ctrl->ant_on(ant_nums[i]);
+    phase_ctrl->phase_control(ant_nums[i], DEFAULT_POWER, 0);
     cur_weights[ant_nums[i]] = 0;
   }
-  phase_ctrl->ant_off(ant_nums[ant_amount-1]);
+  phase_ctrl->ant_off(SIC_PORT_NUM_);
   phase_ctrl->data_apply();
   std::cout << "SIC over"<<std::endl;
 
@@ -218,8 +225,9 @@ int Beamformer::SIC_port_measure_over(void){
 
 int Beamformer::SIC_handler(struct average_corr_data & data){
   sic_ctrl->setCurrentAmp(std::complex<float>(data.cw_i, data.cw_q));
-  cur_weights[ant_nums[ant_amount-1]] = sic_ctrl->getPhase();   //get SIC phase
-  phase_ctrl->phase_control(ant_nums[ant_amount-1], sic_ctrl->getPower(), cur_weights[ant_nums[ant_amount-1]]); //change phase and power
+  cur_weights[SIC_PORT_NUM_] = sic_ctrl->getPhase();   //get SIC phase
+  phase_ctrl->ant_on(SIC_PORT_NUM_);
+  phase_ctrl->phase_control(SIC_PORT_NUM_, sic_ctrl->getPower(), cur_weights[SIC_PORT_NUM_]); //change phase and power
   phase_ctrl->data_apply();
 
   return 0;
@@ -230,7 +238,8 @@ int Beamformer::Signal_handler(struct average_corr_data & data){
   uint16_t tag_id = 0;
   std::vector<int> weightVector;
 
-  phase_ctrl->ant_off(ant_nums[ant_amount-1]);
+  phase_ctrl->ant_off(SIC_PORT_NUM_);
+
 
   for(int i = 0; i<16; i++){
     tag_id = tag_id << 1;
