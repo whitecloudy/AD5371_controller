@@ -96,14 +96,15 @@ Beamformer::Beamformer(Phase_Attenuator_controller * controller_p, int ant_amoun
   this->phase_ctrl = controller_p;
   this->ant_amount = ant_amount_p;
   this->ant_nums = new int[this->ant_amount];
+  
+  memcpy(ant_nums, ant_num_p, sizeof(int)*(this->ant_amount));
 
   log.open("log.csv");
   for(int i = 0; i<ant_amount; i++){
     log<<"phase "<<ant_nums[i]<<", ";
   }
-  log<<"avg corr,i,q,RN16"<<std::endl;
+  log<<"avg corr,corr i, corr q, cw i, cw q, RN16, round"<<std::endl;
 
-  memcpy(ant_nums, ant_num_p, sizeof(int)*(this->ant_amount));
 }
 
 
@@ -118,7 +119,7 @@ int Beamformer::init_beamformer(void){
 
   std::vector<int> weightVector = BWtrainer->startTraining();
   vector2cur_weights(weightVector);
-  for(int i = 0; i<ant_amount; i++){
+  for(int i = 0; i<ant_amount-1; i++){
     phase_ctrl->ant_on(ant_nums[i]);
   }
   std::cout<<"Init"<<std::endl;
@@ -215,7 +216,7 @@ int Beamformer::SIC_port_measure_over(void){
   for(int i = 0; i<ant_amount-1; i++){
     phase_ctrl->ant_on(ant_nums[i]);
   }
-  
+
   weights_apply(cur_weights);
 
   std::cout << "SIC over"<<std::endl;
@@ -274,7 +275,7 @@ int Beamformer::Signal_handler(struct average_corr_data & data){
     }
   }
   /*****************************************************************/
-  
+
   return 0;
 }
 
