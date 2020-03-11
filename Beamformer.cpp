@@ -103,7 +103,7 @@ Beamformer::Beamformer(Phase_Attenuator_controller * controller_p, int ant_amoun
   for(int i = 0; i<ant_amount; i++){
     log<<"phase "<<ant_nums[i]<<", ";
   }
-  log<<"avg corr,corr i, corr q, cw i, cw q, RN16, round"<<std::endl;
+  log<<"avg corr,corr i, corr q, cw i, cw q,std i,std q ,RN16, round"<<std::endl;
 
 }
 
@@ -168,7 +168,7 @@ int Beamformer::weights_apply(void){
 
 
 int Beamformer::vector2cur_weights(std::vector<int> weightVector){
-  for(int i = 0; i<ant_amount;i++){
+  for(int i = 0; i<ant_amount-1;i++){
     cur_weights[ant_nums[i]] = weightVector[i];
   }
   return 0;
@@ -292,12 +292,12 @@ int Beamformer::dataLogging(struct average_corr_data & data){
     for(int i = 0; i<ant_amount;i++){
       log<<cur_weights[ant_nums[i]]<<", ";
     }
-    log<<data.avg_corr<<", "<<data.avg_i<<", "<<data.avg_q<<", "<<data.cw_i<<", "<<data.cw_q<<", "<<tag_id<<", "<<data.round<<std::endl;
+    log<<data.avg_corr<<", "<<data.avg_i<<", "<<data.avg_q<<", "<<data.cw_i<<", "<<data.cw_q<<", "<<data.stddev_i<<", "<<data.stddev_q<<", "<<tag_id<<", "<<data.round<<std::endl;
   }else if(data.successFlag == _PREAMBLE_FAIL){
     for(int i = 0; i<ant_amount;i++){
       log<<cur_weights[ant_nums[i]]<<", ";
     }
-    log<<0.0<<", "<<0.0<<", "<<0.0<<","<<data.cw_i<<", "<<data.cw_q<<", "<<"-"<<","<<data.round<<std::endl;
+    log<<0.0<<", "<<0.0<<", "<<0.0<<","<<data.cw_i<<", "<<data.cw_q<<", "<<data.stddev_i<<", "<<data.stddev_q<<", "<<"-"<<","<<data.round<<std::endl;
   }
 
   return 0;

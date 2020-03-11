@@ -26,6 +26,8 @@ struct average_corr_data{
   unsigned int round;
   float cw_i;
   float cw_q;
+  float stddev_i;
+  float stddev_q;
 };
 
 class Adaptive_beamtrainer;

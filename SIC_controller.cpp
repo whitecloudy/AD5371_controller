@@ -8,10 +8,10 @@
 
 #define dB2Amp(_X) pow(10.0f, _X/20.0f)
 #define Amp2dB(_X) 20.0f*log10(_X)
-#define _MINdB  (-13.0)
+#define _MINdB  (-22.0)
 #define _MAXdB  (-3.0)
 
-//#define _SIC_DEBUG_
+#define _SIC_DEBUG_
 
 SIC_controller::SIC_controller(std::complex<float> input_ref){
   this->weight_cur = std::polar((float)dB2Amp(SIC_REF_POWER), Deg2Rad(SIC_REF_PHASE)); 
