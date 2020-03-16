@@ -11,6 +11,8 @@ class Adaptive_beamtrainer{
     bool isTraining = false;
     int training_count = 0;
 
+    float curAngle = 0;
+
     arma::Mat<std::complex<float>> randomWeightMatrix;
     arma::Mat<std::complex<float>> invMatrix;
 
@@ -30,6 +32,8 @@ class Adaptive_beamtrainer{
     const std::vector<int> startTraining(void);
 
     const std::vector<int> getRandomWeight(void);
+
+    const std::vector<int> getDirectional(float directionAngle);
     const std::vector<int> getRespond(struct average_corr_data recvData);
     const std::vector<int> cannotGetRespond(void);
 
