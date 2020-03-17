@@ -8,6 +8,10 @@
 #define Deg2Rad(_num) (float)(_num * (PI / 180))
 #define Rad2Deg(_num) (float)(_num / PI * 180.0)
 
+#define ANGLE_RANGE_MIN (-60)
+#define ANGLE_RANGE_MAX (60)
+#define ANGLE_STEP      (20)
+
 
 Adaptive_beamtrainer::Adaptive_beamtrainer(int ant_num){
   this->antNum = ant_num;
@@ -103,7 +107,7 @@ const std::vector<int> Adaptive_beamtrainer::startTraining(void){
   isTraining = true;
   std::cout << "RandomMatrix reset : "<<randomWeightMatrix.n_elem<<std::endl;
 
-  curAngle = 0;
+  curAngle = ANGLE_RANGE_MIN;
   return getDirectional(curAngle);
 }
 
@@ -112,7 +116,9 @@ const std::vector<int> Adaptive_beamtrainer::startTraining(void){
  *  Handle the tag's respond
  */
 const std::vector<int> Adaptive_beamtrainer::getRespond(struct average_corr_data recvData){
-  curAngle += 10.0;
+  curAngle += ANGLE_STEP;
+  if(curAngle > ANGLE_RANGE_MAX)
+    curAngle = ANGLE_RANGE_MIN;
   return getDirectional(curAngle);
 }
 
@@ -120,7 +126,9 @@ const std::vector<int> Adaptive_beamtrainer::getRespond(struct average_corr_data
  * Handle when the tag does not respond
  */
 const std::vector<int> Adaptive_beamtrainer::cannotGetRespond(void){
-  curAngle += 10.0;
+  curAngle += ANGLE_STEP;
+  if(curAngle > ANGLE_RANGE_MAX)
+    curAngle = ANGLE_RANGE_MIN;
   return getDirectional(curAngle);
 }
 
