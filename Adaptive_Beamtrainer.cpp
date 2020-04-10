@@ -10,7 +10,7 @@
 
 #define ANGLE_RANGE_MIN (-60)
 #define ANGLE_RANGE_MAX (60)
-#define ANGLE_STEP      (20)
+#define ANGLE_STEP      (10)
 
 
 Adaptive_beamtrainer::Adaptive_beamtrainer(int ant_num){
