@@ -1,4 +1,4 @@
-CC = g++
+CXXFLAGS = $(CC_VERSION) $(CFLAGS) $(LINK)
 CC_VERSION = -std=c++11
 CFLAGS = -W -Wall -g
 TARGET = $(TARGET1) $(TARGET2) $(TARGET3)
@@ -11,13 +11,13 @@ OBJECTS = SPI_communicator.o Vout_controller.o Phase_Attenuator_controller.o Bea
 all : $(TARGET) 
 
 $(TARGET1) : $(TARGET1).o $(OBJECTS)
-	$(CC) $(CFLAGS) $(CC_VERSION) -o $@ $^ $(LINK)
+	$(CXX) -o $@ $^ $(LINK)
 
 $(TARGET2) : $(TARGET2).o $(OBJECTS)
-	$(CC) $(CFLAGS) $(CC_VERSION) -o $@ $^ $(LINK)
+	$(CXX) -o $@ $^ $(LINK)
 
 $(TARGET3) : $(TARGET3).o $(OBJECTS)
-	$(CC) $(CFLAGS) $(CC_VERSION) -o $@ $^ $(LINK)
+	$(CXX) -o $@ $^ $(LINK)
 
 
 
