@@ -151,7 +151,7 @@ int Beamformer::run_beamformer(void){
       }
 
 
-      log<<data.avg_corr<<", "<<data.avg_i<<", "<<data.avg_q<<","<<tag_id<<","<<data.round<<std::endl;
+      log<<data.avg_corr<<", "<<data.avg_i<<", "<<data.avg_q<<","<<tag_id<<","<<data.round<<","<<data.cw_i<<","<<data.cw_q<<std::endl;
 
       if(repeat < 5)
         repeat++;
