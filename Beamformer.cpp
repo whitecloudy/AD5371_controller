@@ -233,6 +233,7 @@ int Beamformer::SIC_handler(struct average_corr_data & data){
   return 0;
 }
 
+int power_count = 0;
 
 int Beamformer::Signal_handler(struct average_corr_data & data){
   uint16_t tag_id = 0;
@@ -257,22 +258,28 @@ int Beamformer::Signal_handler(struct average_corr_data & data){
     printf("avg iq : %f, %f\n",data.avg_i, data.avg_q);
     printf("avg amp : %f, %f\n\n",data.cw_i, data.cw_q);
 
-
     weightVector = BWtrainer->getRespond(data);
     vector2cur_weights(weightVector);
-    if(weights_apply(cur_weights)){
-      std::cerr<<"weight apply failed"<<std::endl;
-      return 1;
-    }
   }else{
     printf("Couldn't get RN16\n\n");
 
     weightVector = BWtrainer->cannotGetRespond();
     vector2cur_weights(weightVector);
-    if(weights_apply(cur_weights)){
-      std::cerr<<"weight apply failed"<<std::endl;
-      return 1;
-    }
+  }
+  power_count = (power_count + 1)%10;
+
+  
+  //for(int i =0; i<ant_amount-1; i++){
+  //  phase_ctrl->phase_control(ant_nums[i], power_count - 12, cur_weights[ant_nums[i]]);
+  //}
+  
+
+  
+  sic_ctrl->setPower(-22.0);
+  phase_ctrl->phase_control(SIC_PORT_NUM_, -22.0, cur_weights[SIC_PORT_NUM_]); //change phase and power
+  if(weights_apply(cur_weights)){
+    std::cerr<<"weight apply failed"<<std::endl;
+    return 1;
   }
   /*****************************************************************/
 

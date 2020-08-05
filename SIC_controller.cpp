@@ -58,3 +58,13 @@ float SIC_controller::getPower(void){
 float SIC_controller::getPhase(void){
   return Rad2Deg(std::arg(weight_cur));
 }
+
+int SIC_controller::setPower(float power_a){
+  this->weight_cur = std::polar((float)dB2Amp(power_a), std::arg(weight_cur));
+  return 0;
+}
+
+int SIC_controller::setPhase(float phase_a){
+  this->weight_cur = std::polar(std::abs(weight_cur), Deg2Rad(phase_a));
+  return Rad2Deg(std::arg(weight_cur));
+}

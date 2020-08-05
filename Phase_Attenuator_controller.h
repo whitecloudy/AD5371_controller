@@ -9,7 +9,7 @@
 
 #define ANT_num   (16)
 #define POWER_num (39)
-#define DEFAULT_POWER (-6.0)
+#define DEFAULT_POWER (-3.0)
 #define dB2idx(_dB)  (unsigned int)(((_dB) + 22.0)/0.5)
 #define PoffIDX    (-1)
 #define DEFAULT_POWER_idx (dB2idx(DEFAULT_POWER))

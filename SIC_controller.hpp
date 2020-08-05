@@ -17,7 +17,10 @@ class SIC_controller{
     int setCurrentAmp(std::complex<float>);
     std::complex<float> getWeight(void);
     float getPhase(void);
-    float getPower(void);    
+    float getPower(void);
+    int setPhase(float);
+    int setPower(float);    
+
 };
 
 #endif
