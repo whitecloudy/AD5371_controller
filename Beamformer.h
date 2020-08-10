@@ -3,7 +3,9 @@
 
 #include "Controller_Global.h"
 #include "Phase_Attenuator_controller.h"
+#include "SIC_controller.hpp"
 #include "IPC_controller.h"
+#include "Adaptive_Beamtrainer.h"
 #include <iostream>
 #include <string>
 #include <cstdio>
@@ -23,18 +25,27 @@ struct average_corr_data{
   unsigned int round;
   float cw_i;
   float cw_q;
+  float stddev_i;
+  float stddev_q;
 };
+
+
+class Adaptive_beamtrainer;
 
 
 class Beamformer{
   private:
     Phase_Attenuator_controller * phase_ctrl;
+    Adaptive_beamtrainer * BWtrainer;
     IPC_controller ipc;
     std::ofstream log;
+    SIC_controller * sic_ctrl;
 
     int ant_amount;
     int * ant_nums;
     int cur_weights[ANT_num] = {};
+
+    std::vector<int> weightVector;
 
   private:
     int weights_addition(int * dest_weights, int * weights0, int * weights1);
@@ -49,6 +60,13 @@ class Beamformer{
     int init_beamformer(void);
     int run_beamformer(void);
     int calculate_beamforming_weights(void);
+
+    int SIC_port_measure(void);
+    int SIC_port_measure_over(void);
+    int SIC_handler(struct average_corr_data);
+    int Signal_handler(struct average_corr_data);
+
+    int dataLogging(struct average_corr_data&);
 
   public:
     Beamformer(Phase_Attenuator_controller * controller, int ant_amount, int * ant_num);

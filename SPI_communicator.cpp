@@ -58,6 +58,8 @@ int SPI_communicator::transmit_cmd(const unsigned char * spi_bytes){
 
 
 int SPI_communicator::data_apply(){
+  if(buf_count == 0)
+    return 0;
   int result = sendto(sockfd, buf, buf_count*FRAME_SIZE, MSG_CONFIRM, (const struct sockaddr *)&servaddr, sizeof(servaddr));
 
   if(result < 0){
