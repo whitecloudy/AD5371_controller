@@ -225,10 +225,13 @@ int Beamformer::SIC_port_measure_over(void){
 }
 
 int Beamformer::SIC_handler(struct average_corr_data & data){
-  sic_ctrl->setCurrentAmp(std::complex<float>(data.cw_i, data.cw_q));
-  cur_weights[SIC_PORT_NUM_] = sic_ctrl->getPhase();   //get SIC phase
-  phase_ctrl->phase_control(SIC_PORT_NUM_, sic_ctrl->getPower(), cur_weights[SIC_PORT_NUM_]); //change phase and power
-  phase_ctrl->data_apply();
+  if(data.successFlag != _GATE_FAIL){
+
+    sic_ctrl->setCurrentAmp(std::complex<float>(data.cw_i, data.cw_q));
+    cur_weights[SIC_PORT_NUM_] = sic_ctrl->getPhase();   //get SIC phase
+    phase_ctrl->phase_control(SIC_PORT_NUM_, sic_ctrl->getPower(), cur_weights[SIC_PORT_NUM_]); //change phase and power
+    phase_ctrl->data_apply();
+  }
 
   return 0;
 }
@@ -268,13 +271,13 @@ int Beamformer::Signal_handler(struct average_corr_data & data){
   }
   power_count = (power_count + 1)%10;
 
-  
+
   //for(int i =0; i<ant_amount-1; i++){
   //  phase_ctrl->phase_control(ant_nums[i], power_count - 12, cur_weights[ant_nums[i]]);
   //}
-  
 
-  
+
+
   sic_ctrl->setPower(-22.0);
   phase_ctrl->phase_control(SIC_PORT_NUM_, -22.0, cur_weights[SIC_PORT_NUM_]); //change phase and power
   if(weights_apply(cur_weights)){
