@@ -80,9 +80,12 @@ int Beamformer::run_beamformer(void){
         break;   
       } 
       memcpy(&data, buffer, sizeof(data));
-
       dataLogging(data);
-      Signal_handler(data);
+      if(data.successFlag==_GATE_FAIL){
+        k--;
+      }else{
+        Signal_handler(data);
+      }
 
       //send ack so that Gen2 program can recognize that the beamforming has been done
       if(ipc.send_ack() == -1){
@@ -174,7 +177,7 @@ int Beamformer::weights_apply(int * weights){
 
 int Beamformer::weights_apply(void){
   int * weights = cur_weights;
-  for(int i = 0; i<ant_amount; i++){
+  for(int i = 0; i<ant_amount-1; i++){
     phase_ctrl->phase_control(ant_nums[i], weights[ant_nums[i]]);
   }
   return phase_ctrl->data_apply();
