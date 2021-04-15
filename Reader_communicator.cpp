@@ -12,7 +12,7 @@
 #include <bcm2835.h>
 
 #define PORT     10101
-#define MAXLINE 256
+#define MAXLINE  (4092)
 
 
 #define LDAC_pin 5
@@ -96,10 +96,10 @@ int main(int argc, char** argv) {
     std::cout<< n <<std::endl;
     for(int i = 0; i<n; i+=3){
       //    sync.give_signal();
-      spi_comm.transmit(&buffer[i], 3);
 #ifdef __DEBUG__
-      printf("sended data : %ud %ud %ud\n",buffer[i],buffer[i+1],buffer[i+2]);
+      printf("sended data : %x %x %x\n",(unsigned int)buffer[i],(unsigned int)buffer[i+1],(unsigned int)buffer[i+2]);
 #endif
+      spi_comm.transmit(&buffer[i], 3);
     }
 
 
