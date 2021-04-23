@@ -29,11 +29,16 @@ void signalHandler(int error){
   exit(1);
 }
 
-#define __DEBUG__
+//#define __DEBUG__
 int main(int argc, char** argv) { 
   int sockfd;
   int spi_speed = 0;
-  char buffer[MAXLINE];
+
+  struct buf_struct
+  {
+    uint8_t flag;
+    uint8_t data[MAXLINE];
+  } buffer;
   struct sockaddr_in servaddr, cliaddr; 
 
   if(argc == 1)
@@ -82,7 +87,7 @@ int main(int argc, char** argv) {
     int n;
 
     std::cout <<"Running!"<<std::endl;
-    n = recvfrom(sockfd, buffer, MAXLINE, MSG_WAITALL, (struct sockaddr *) &cliaddr,(socklen_t *) &len); 
+    n = recvfrom(sockfd, &buffer, sizeof(struct buf_struct), MSG_WAITALL, (struct sockaddr *) &cliaddr,(socklen_t *) &len); 
 
 #ifdef __DEBUG__
     printf("received packet byte : %d\n",n);
@@ -90,22 +95,22 @@ int main(int argc, char** argv) {
 
 
 
-    if(n<=0)
+    if(n<=0 || buffer.flag == 0x01)
       break;
 
-    std::cout<< n <<std::endl;
+    n -= 1;
     for(int i = 0; i<n; i+=3){
       //    sync.give_signal();
 #ifdef __DEBUG__
-      printf("sended data : %x %x %x\n",(unsigned int)buffer[i],(unsigned int)buffer[i+1],(unsigned int)buffer[i+2]);
+      printf("sended data : %x %x %x\n",(unsigned int)buffer.data[i],(unsigned int)buffer.data[i+1],(unsigned int)buffer.data[i+2]);
 #endif
-      spi_comm.transmit(&buffer[i], 3);
+      spi_comm.transmit(&buffer.data[i], 3);
     }
-
 
     ldac.give_signal();
     sendto(sockfd, &n, sizeof(int), MSG_CONFIRM, (const struct sockaddr *)&cliaddr, sizeof(cliaddr));
 
+    std::cout<< n <<std::endl;
   }
 
   close(sockfd);

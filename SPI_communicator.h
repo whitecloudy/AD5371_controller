@@ -15,6 +15,6 @@ class SPI_communicator{
     std::ofstream log;
   public:
     SPI_communicator(int channel, int kHz_speed, int mode);
-    int transmit(char * buffer, int size);
+    int transmit(uint8_t * buffer, int size);
     ~SPI_communicator();
 };

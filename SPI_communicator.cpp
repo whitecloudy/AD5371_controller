@@ -55,8 +55,8 @@ SPI_communicator::~SPI_communicator(){
   log.close();
 }
 
-int SPI_communicator::transmit(char * buffer, int size){
-  bcm2835_spi_transfern(buffer, size);
+int SPI_communicator::transmit(uint8_t * buffer, int size){
+  bcm2835_spi_transfern((char*)buffer, size);
 
   for(int i = 0; i< size; i++){
     log<<(unsigned int)buffer[i]<<", ";
